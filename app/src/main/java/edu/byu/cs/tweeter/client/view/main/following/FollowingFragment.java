@@ -27,16 +27,17 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import edu.byu.cs.client.R;
-import edu.byu.cs.tweeter.client.backgroundTask.GetFollowingTask;
-import edu.byu.cs.tweeter.client.backgroundTask.GetUserTask;
+import edu.byu.cs.tweeter.client.model.service.backgroundTask.GetFollowingTask;
+import edu.byu.cs.tweeter.client.model.service.backgroundTask.GetUserTask;
 import edu.byu.cs.tweeter.client.cache.Cache;
+import edu.byu.cs.tweeter.client.presenter.FollowingPresenter;
 import edu.byu.cs.tweeter.client.view.main.MainActivity;
 import edu.byu.cs.tweeter.model.domain.User;
 
 /**
  * Implements the "Following" tab.
  */
-public class FollowingFragment extends Fragment {
+public class FollowingFragment extends Fragment implements FollowingPresenter.View {
 
     private static final String LOG_TAG = "FollowingFragment";
     private static final String USER_KEY = "UserKey";
@@ -44,11 +45,11 @@ public class FollowingFragment extends Fragment {
     private static final int LOADING_DATA_VIEW = 0;
     private static final int ITEM_VIEW = 1;
 
-    private static final int PAGE_SIZE = 10;
-
     private User user;
 
     private FollowingRecyclerViewAdapter followingRecyclerViewAdapter;
+
+    private FollowingPresenter presenter;
 
     /**
      * Creates an instance of the fragment and places the target user in an arguments
@@ -84,7 +85,27 @@ public class FollowingFragment extends Fragment {
 
         followingRecyclerView.addOnScrollListener(new FollowRecyclerViewPaginationScrollListener(layoutManager));
 
+        presenter = new FollowingPresenter(this);
         return view;
+    }
+
+    @Override
+    public void displayErrorMessage(String message) {
+        Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void setLoadingStatus(boolean value) {
+        if (value) {
+            followingRecyclerViewAdapter.addLoadingFooter();
+        } else {
+            followingRecyclerViewAdapter.removeLoadingFooter();
+        }
+    }
+
+    @Override
+    public void addFollowees(List<User> followees) {
+        followingRecyclerViewAdapter.addItems(followees);
     }
 
     /**
@@ -162,11 +183,6 @@ public class FollowingFragment extends Fragment {
 
         private final List<User> users = new ArrayList<>();
 
-        private User lastFollowee;
-
-        private boolean hasMorePages;
-        private boolean isLoading = false;
-
         /**
          * Creates an instance and loads the first page of following data.
          */
@@ -243,7 +259,7 @@ public class FollowingFragment extends Fragment {
          */
         @Override
         public void onBindViewHolder(@NonNull FollowingHolder followingHolder, int position) {
-            if (!isLoading) {
+            if (!presenter.isLoading()) {
                 followingHolder.bindUser(users.get(position));
             }
         }
@@ -267,7 +283,7 @@ public class FollowingFragment extends Fragment {
          */
         @Override
         public int getItemViewType(int position) {
-            return (position == users.size() - 1 && isLoading) ? LOADING_DATA_VIEW : ITEM_VIEW;
+            return (position == users.size() - 1 && presenter.isLoading()) ? LOADING_DATA_VIEW : ITEM_VIEW;
         }
 
         /**
@@ -275,15 +291,7 @@ public class FollowingFragment extends Fragment {
          * data.
          */
         void loadMoreItems() {
-            if (!isLoading) {   // This guard is important for avoiding a race condition in the scrolling code.
-                isLoading = true;
-                addLoadingFooter();
-
-                GetFollowingTask getFollowingTask = new GetFollowingTask(Cache.getInstance().getCurrUserAuthToken(),
-                        user, PAGE_SIZE, lastFollowee, new GetFollowingHandler());
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                executor.execute(getFollowingTask);
-            }
+            presenter.loadMoreItems(user);
         }
 
         /**
@@ -301,81 +309,54 @@ public class FollowingFragment extends Fragment {
         private void removeLoadingFooter() {
             removeItem(users.get(users.size() - 1));
         }
+    }
 
 
         /**
-         * Message handler (i.e., observer) for GetFollowingTask.
+         * A scroll listener that detects when the user has scrolled to the bottom of the currently
+         * available data.
          */
-        private class GetFollowingHandler extends Handler {
+        private class FollowRecyclerViewPaginationScrollListener extends RecyclerView.OnScrollListener {
+
+            private final LinearLayoutManager layoutManager;
+
+            /**
+             * Creates a new instance.
+             *
+             * @param layoutManager the layout manager being used by the RecyclerView.
+             */
+            FollowRecyclerViewPaginationScrollListener(LinearLayoutManager layoutManager) {
+                this.layoutManager = layoutManager;
+            }
+
+            /**
+             * Determines whether the user has scrolled to the bottom of the currently available data
+             * in the RecyclerView and asks the adapter to load more data if the last load request
+             * indicated that there was more data to load.
+             *
+             * @param recyclerView the RecyclerView.
+             * @param dx           the amount of horizontal scroll.
+             * @param dy           the amount of vertical scroll.
+             */
             @Override
-            public void handleMessage(@NonNull Message msg) {
-                isLoading = false;
-                removeLoadingFooter();
+            public void onScrolled(@NotNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
 
-                boolean success = msg.getData().getBoolean(GetFollowingTask.SUCCESS_KEY);
-                if (success) {
-                    List<User> followees = (List<User>) msg.getData().getSerializable(GetFollowingTask.FOLLOWEES_KEY);
-                    hasMorePages = msg.getData().getBoolean(GetFollowingTask.MORE_PAGES_KEY);
+                int visibleItemCount = layoutManager.getChildCount();
+                int totalItemCount = layoutManager.getItemCount();
+                int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
 
-                    lastFollowee = (followees.size() > 0) ? followees.get(followees.size() - 1) : null;
-
-                    followingRecyclerViewAdapter.addItems(followees);
-                } else if (msg.getData().containsKey(GetFollowingTask.MESSAGE_KEY)) {
-                    String message = msg.getData().getString(GetFollowingTask.MESSAGE_KEY);
-                    Toast.makeText(getContext(), "Failed to get following: " + message, Toast.LENGTH_LONG).show();
-                } else if (msg.getData().containsKey(GetFollowingTask.EXCEPTION_KEY)) {
-                    Exception ex = (Exception) msg.getData().getSerializable(GetFollowingTask.EXCEPTION_KEY);
-                    Toast.makeText(getContext(), "Failed to get following because of exception: " + ex.getMessage(), Toast.LENGTH_LONG).show();
+                if (!presenter.isLoading() && presenter.hasMorePages()) {
+                    if ((visibleItemCount + firstVisibleItemPosition) >=
+                            totalItemCount && firstVisibleItemPosition >= 0) {
+                        // Run this code later on the UI thread
+                        final Handler handler = new Handler(Looper.getMainLooper());
+                        handler.postDelayed(() -> {
+                            followingRecyclerViewAdapter.loadMoreItems();
+                        }, 0);
+                    }
                 }
             }
         }
-    }
-
-    /**
-     * A scroll listener that detects when the user has scrolled to the bottom of the currently
-     * available data.
-     */
-    private class FollowRecyclerViewPaginationScrollListener extends RecyclerView.OnScrollListener {
-
-        private final LinearLayoutManager layoutManager;
-
-        /**
-         * Creates a new instance.
-         *
-         * @param layoutManager the layout manager being used by the RecyclerView.
-         */
-        FollowRecyclerViewPaginationScrollListener(LinearLayoutManager layoutManager) {
-            this.layoutManager = layoutManager;
-        }
-
-        /**
-         * Determines whether the user has scrolled to the bottom of the currently available data
-         * in the RecyclerView and asks the adapter to load more data if the last load request
-         * indicated that there was more data to load.
-         *
-         * @param recyclerView the RecyclerView.
-         * @param dx           the amount of horizontal scroll.
-         * @param dy           the amount of vertical scroll.
-         */
-        @Override
-        public void onScrolled(@NotNull RecyclerView recyclerView, int dx, int dy) {
-            super.onScrolled(recyclerView, dx, dy);
-
-            int visibleItemCount = layoutManager.getChildCount();
-            int totalItemCount = layoutManager.getItemCount();
-            int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
-
-            if (!followingRecyclerViewAdapter.isLoading && followingRecyclerViewAdapter.hasMorePages) {
-                if ((visibleItemCount + firstVisibleItemPosition) >=
-                        totalItemCount && firstVisibleItemPosition >= 0) {
-                    // Run this code later on the UI thread
-                    final Handler handler = new Handler(Looper.getMainLooper());
-                    handler.postDelayed(() -> {
-                        followingRecyclerViewAdapter.loadMoreItems();
-                    }, 0);
-                }
-            }
-        }
-    }
 
 }
