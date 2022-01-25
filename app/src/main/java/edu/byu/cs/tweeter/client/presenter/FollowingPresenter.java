@@ -54,7 +54,8 @@ public class FollowingPresenter {
         if (!isLoading) {   // This guard is important for avoiding a race condition in the scrolling code.
             isLoading = true;
             view.setLoadingStatus(true);
-            followService.getFollowing(Cache.getInstance().getCurrUserAuthToken(), user, PAGE_SIZE, lastFollowee, new GetFollowingObserver());
+            followService.getFollowing(Cache.getInstance().getCurrUserAuthToken(), user, PAGE_SIZE,
+                    lastFollowee, new GetFollowingObserver());
         }
     }
 
