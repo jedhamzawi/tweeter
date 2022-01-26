@@ -48,7 +48,7 @@ public class FollowingPresenter {
         isLoading = loading;
     }
 
-    public void loadMoreItems(User user) {
+    public void getFollowing(User user) {
         if (!isLoading) {   // This guard is important for avoiding a race condition in the scrolling code.
             isLoading = true;
             view.setLoadingStatus(true);

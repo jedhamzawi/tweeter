@@ -80,7 +80,7 @@ public class FollowingFragment extends Fragment implements FollowingPresenter.Vi
         followingRecyclerView.addOnScrollListener(new FollowRecyclerViewPaginationScrollListener(layoutManager));
 
         presenter = new FollowingPresenter(this);
-        presenter.loadMoreItems(user);
+        presenter.getFollowing(user);
 
         return view;
     }
@@ -262,7 +262,7 @@ public class FollowingFragment extends Fragment implements FollowingPresenter.Vi
          * data.
          */
         void loadMoreItems() {
-            presenter.loadMoreItems(user);
+            presenter.getFollowing(user);
         }
 
         /**
