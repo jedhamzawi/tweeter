@@ -1,8 +1,13 @@
 package edu.byu.cs.tweeter.client.presenter;
 
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import edu.byu.cs.tweeter.client.cache.Cache;
 import edu.byu.cs.tweeter.client.model.service.FollowService;
+import edu.byu.cs.tweeter.client.model.service.UserService;
+import edu.byu.cs.tweeter.client.model.service.backgroundTask.LogoutTask;
 import edu.byu.cs.tweeter.model.domain.User;
 
 public class MainPresenter {
@@ -11,14 +16,17 @@ public class MainPresenter {
         void updateFollower(boolean isFollower);
         void updateFollow(boolean follow);
         void updateUnfollow(boolean unfollow);
+        void logoutUser();
     }
 
     private final View view;
     private FollowService followService;
+    private UserService userService;
 
     public MainPresenter(View view) {
         this.view = view;
         followService = new FollowService();
+        userService = new UserService();
     }
 
     public void isFollower(User selectedUser) {
@@ -34,6 +42,10 @@ public class MainPresenter {
     public void unfollow(User selectedUser) {
         view.displayMessage("Removing " + selectedUser.getName() + "...");
         followService.unfollow(Cache.getInstance().getCurrUserAuthToken(), selectedUser, new UnfollowObserver());
+    }
+
+    public void logoutUser() {
+        userService.logoutUser(Cache.getInstance().getCurrUserAuthToken(), new LogoutObserver());
     }
 
     public class IsFollowerObserver implements FollowService.IsFollowerObserver {
@@ -88,6 +100,24 @@ public class MainPresenter {
         public void handleException(Exception ex) {
             view.updateUnfollow(false);
             view.displayMessage("Failed to unfollow because of exception: " + ex.getMessage());
+        }
+    }
+
+    public class LogoutObserver implements UserService.LogoutObserver {
+        @Override
+        public void handleSuccess() {
+            Cache.getInstance().clearCache();
+            view.logoutUser();
+        }
+
+        @Override
+        public void handleFailure(String message) {
+
+        }
+
+        @Override
+        public void handleException(Exception ex) {
+
         }
     }
 }
