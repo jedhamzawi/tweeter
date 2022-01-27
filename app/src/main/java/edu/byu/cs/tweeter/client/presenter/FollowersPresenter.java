@@ -3,7 +3,7 @@ package edu.byu.cs.tweeter.client.presenter;
 import java.util.List;
 
 import edu.byu.cs.tweeter.client.cache.Cache;
-import edu.byu.cs.tweeter.client.model.service.FollowersService;
+import edu.byu.cs.tweeter.client.model.service.FollowService;
 import edu.byu.cs.tweeter.client.model.service.UserService;
 import edu.byu.cs.tweeter.model.domain.User;
 
@@ -19,7 +19,7 @@ public class FollowersPresenter {
 
     private final View view;
     private final UserService userService;
-    private final FollowersService followersService;
+    private final FollowService followService;
 
     private boolean isLoading = false;
     private boolean hasMorePages;
@@ -28,7 +28,7 @@ public class FollowersPresenter {
     public FollowersPresenter(View view) {
         this.view = view;
         this.userService = new UserService();
-        this.followersService = new FollowersService();
+        this.followService = new FollowService();
     }
 
     public boolean isLoading() {
@@ -51,7 +51,7 @@ public class FollowersPresenter {
         if (!isLoading) {   // This guard is important for avoiding a race condition in the scrolling code.
             isLoading = true;
             view.setLoadingStatus(true);
-            followersService.getFollowers(Cache.getInstance().getCurrUserAuthToken(), user,
+            followService.getFollowers(Cache.getInstance().getCurrUserAuthToken(), user,
                     PAGE_SIZE, lastFollower, new GetFollowersObserver());
         }
     }
@@ -61,7 +61,7 @@ public class FollowersPresenter {
         view.displayMessage("Getting user profile...");
     }
 
-    public class GetFollowersObserver implements FollowersService.GetFollowersObserver {
+    public class GetFollowersObserver implements FollowService.GetFollowersObserver {
         @Override
         public void handleSuccess(List<User> followers, boolean hasMorePages) {
             isLoading = false;
