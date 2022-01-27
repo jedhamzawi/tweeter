@@ -1,6 +1,5 @@
 package edu.byu.cs.tweeter.client.presenter;
 
-
 import java.net.MalformedURLException;
 import java.text.ParseException;
 
@@ -14,7 +13,7 @@ public class MainPresenter {
 
     public interface View {
         void displayMessage(String message);
-        void updateFollower(boolean isFollower);
+        void updateFollowButton(boolean isFollower);
         void updateFollow(boolean follow);
         void updateUnfollow(boolean unfollow);
         void logoutUser();
@@ -24,9 +23,9 @@ public class MainPresenter {
     }
 
     private final View view;
-    private FollowService followService;
-    private UserService userService;
-    private StatusService statusService;
+    private final FollowService followService;
+    private final UserService userService;
+    private final StatusService statusService;
 
     public MainPresenter(View view) {
         this.view = view;
@@ -69,7 +68,7 @@ public class MainPresenter {
     public class IsFollowerObserver implements FollowService.IsFollowerObserver {
         @Override
         public void handleSuccess(boolean isFollower) {
-            view.updateFollower(isFollower);
+            view.updateFollowButton(isFollower);
         }
 
         @Override

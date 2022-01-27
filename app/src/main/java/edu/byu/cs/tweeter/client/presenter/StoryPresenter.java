@@ -19,9 +19,9 @@ public class StoryPresenter {
         void addStory(List<Status> statuses);
     }
 
-    private View view;
-    private UserService userService;
-    private StoryService storyService;
+    private final View view;
+    private final UserService userService;
+    private final StoryService storyService;
 
     private boolean isLoading = false;
     private boolean hasMorePages;
@@ -64,7 +64,7 @@ public class StoryPresenter {
         view.displayMessage("Getting user profile...");
     }
 
-    public class GetStoryObserver implements StoryService.GetStoryObserver {
+    private class GetStoryObserver implements StoryService.GetStoryObserver {
         @Override
         public void handleSuccess(List<Status> statuses, boolean hasMorePages) {
             isLoading = false;
@@ -89,7 +89,7 @@ public class StoryPresenter {
         }
     }
 
-    public class GetUserObserver implements UserService.GetUserObserver {
+    private class GetUserObserver implements UserService.GetUserObserver {
         @Override
         public void handleSuccess(User user) {
             view.newUserActivity(user);

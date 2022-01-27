@@ -162,7 +162,6 @@ public class MainActivity extends AppCompatActivity implements StatusDialogFragm
     public void onStatusPosted(String post) {
         postingToast = Toast.makeText(this, "Posting Status...", Toast.LENGTH_LONG);
         postingToast.show();
-
         try {
             presenter.postStatus(post);
         } catch (Exception ex) {
@@ -178,15 +177,16 @@ public class MainActivity extends AppCompatActivity implements StatusDialogFragm
         presenter.getFollowingCount(selectedUser);
     }
 
-    public void updateFollowButton(boolean removed) {
+    @Override
+    public void updateFollowButton(boolean followed) {
         // If follow relationship was removed.
-        if (removed) {
-            followButton.setText(R.string.follow);
-            followButton.setBackgroundColor(getResources().getColor(R.color.colorAccent));
-        } else {
+        if (followed) {
             followButton.setText(R.string.following);
             followButton.setBackgroundColor(getResources().getColor(R.color.white));
             followButton.setTextColor(getResources().getColor(R.color.lightGray));
+        } else {
+            followButton.setText(R.string.follow);
+            followButton.setBackgroundColor(getResources().getColor(R.color.colorAccent));
         }
     }
 
@@ -196,22 +196,10 @@ public class MainActivity extends AppCompatActivity implements StatusDialogFragm
     }
 
     @Override
-    public void updateFollower(boolean isFollower) {
-        if (isFollower) {
-            followButton.setText(R.string.following);
-            followButton.setBackgroundColor(getResources().getColor(R.color.white));
-            followButton.setTextColor(getResources().getColor(R.color.lightGray));
-        } else {
-            followButton.setText(R.string.follow);
-            followButton.setBackgroundColor(getResources().getColor(R.color.colorAccent));
-        }
-    }
-
-    @Override
     public void updateFollow(boolean follow) {
         if (follow) {
             updateSelectedUserFollowingAndFollowers();
-            updateFollowButton(false);
+            updateFollowButton(true);
         }
         followButton.setEnabled(true);
     }
@@ -220,7 +208,7 @@ public class MainActivity extends AppCompatActivity implements StatusDialogFragm
     public void updateUnfollow(boolean unfollow) {
         if (unfollow) {
             updateSelectedUserFollowingAndFollowers();
-            updateFollowButton(true);
+            updateFollowButton(false);
         }
         followButton.setEnabled(true);
     }

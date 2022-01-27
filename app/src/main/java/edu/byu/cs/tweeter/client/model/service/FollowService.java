@@ -2,7 +2,6 @@ package edu.byu.cs.tweeter.client.model.service;
 
 import android.os.Handler;
 import android.os.Message;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -10,8 +9,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import edu.byu.cs.client.R;
-import edu.byu.cs.tweeter.client.cache.Cache;
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.FollowTask;
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.GetFollowersCountTask;
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.GetFollowersTask;
@@ -20,7 +17,6 @@ import edu.byu.cs.tweeter.client.model.service.backgroundTask.GetFollowingTask;
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.IsFollowerTask;
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.UnfollowTask;
 import edu.byu.cs.tweeter.client.presenter.MainPresenter;
-import edu.byu.cs.tweeter.client.view.main.MainActivity;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 
@@ -111,7 +107,7 @@ public class FollowService {
 
     public void getFollowingCount(AuthToken currUserAuthToken, User selectedUser, MainPresenter.GetFollowingCountObserver observer) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        GetFollowingCountTask followingCountTask = new GetFollowingCountTask(Cache.getInstance().getCurrUserAuthToken(),
+        GetFollowingCountTask followingCountTask = new GetFollowingCountTask(currUserAuthToken,
                 selectedUser, new GetFollowingCountHandler(observer));
         executor.execute(followingCountTask);
     }
@@ -120,7 +116,7 @@ public class FollowService {
      * Message handler (i.e., observer) for GetFollowingTask.
      */
     private class GetFollowingHandler extends Handler {
-        private GetFollowingObserver observer;
+        private final GetFollowingObserver observer;
 
         public GetFollowingHandler(GetFollowingObserver observer) {
             this.observer = observer;
@@ -146,7 +142,7 @@ public class FollowService {
      * Message handler (i.e., observer) for GetFollowersTask.
      */
     private class GetFollowersHandler extends Handler {
-        private GetFollowersObserver observer;
+        private final GetFollowersObserver observer;
 
         public GetFollowersHandler(GetFollowersObserver observer) {
             this.observer = observer;
@@ -170,7 +166,7 @@ public class FollowService {
     }
 
     private class IsFollowerHandler extends Handler {
-        private IsFollowerObserver observer;
+        private final IsFollowerObserver observer;
 
         public IsFollowerHandler(IsFollowerObserver observer) {
             this.observer = observer;
@@ -192,7 +188,7 @@ public class FollowService {
     }
 
     private class FollowHandler extends Handler {
-        private FollowObserver observer;
+        private final FollowObserver observer;
 
         public FollowHandler(FollowObserver observer) {
             this.observer = observer;
@@ -213,7 +209,7 @@ public class FollowService {
     }
 
     private class UnfollowHandler extends Handler {
-        private UnfollowObserver observer;
+        private final UnfollowObserver observer;
 
         public UnfollowHandler(UnfollowObserver observer) {
             this.observer = observer;
@@ -234,7 +230,7 @@ public class FollowService {
     }
 
     private class GetFollowersCountHandler extends Handler {
-        private GetFollowersCountObserver observer;
+        private final GetFollowersCountObserver observer;
 
         public GetFollowersCountHandler(GetFollowersCountObserver observer) {
             this.observer = observer;
@@ -257,7 +253,7 @@ public class FollowService {
     }
 
     private class GetFollowingCountHandler extends Handler {
-        private GetFollowingCountObserver observer;
+        private final GetFollowingCountObserver observer;
 
         public GetFollowingCountHandler(GetFollowingCountObserver observer) {
             this.observer = observer;

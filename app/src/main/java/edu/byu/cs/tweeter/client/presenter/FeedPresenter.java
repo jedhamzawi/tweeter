@@ -2,14 +2,10 @@ package edu.byu.cs.tweeter.client.presenter;
 
 import java.net.MalformedURLException;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import edu.byu.cs.tweeter.client.cache.Cache;
 import edu.byu.cs.tweeter.client.model.service.FeedService;
 import edu.byu.cs.tweeter.client.model.service.UserService;
-import edu.byu.cs.tweeter.client.model.service.backgroundTask.GetFeedTask;
-import edu.byu.cs.tweeter.client.view.main.feed.FeedFragment;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
@@ -49,10 +45,6 @@ public class FeedPresenter {
         return isLoading;
     }
 
-    public void setLoading(boolean loading) {
-        isLoading = loading;
-    }
-
     public void loadMoreItems(User user) throws MalformedURLException {
         if (!isLoading) {   // This guard is important for avoiding a race condition in the scrolling code.
             isLoading = true;
@@ -68,7 +60,7 @@ public class FeedPresenter {
         view.displayMessage("Getting user's profile...");
     }
 
-    public class GetFeedObserver implements FeedService.GetFeedObserver {
+    private class GetFeedObserver implements FeedService.GetFeedObserver {
         @Override
         public void handleSuccess(List<Status> statuses, boolean hasMorePages) {
             isLoading = false;
@@ -106,7 +98,7 @@ public class FeedPresenter {
         }
     }
 
-    public class GetUserObserver implements UserService.GetUserObserver {
+    private class GetUserObserver implements UserService.GetUserObserver {
         @Override
         public void handleSuccess(User user) {
             view.newUserActivity(user);

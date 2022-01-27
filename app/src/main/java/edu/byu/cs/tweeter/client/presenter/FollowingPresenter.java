@@ -22,9 +22,9 @@ public class FollowingPresenter {
     private boolean hasMorePages;
     private boolean isLoading = false;
 
-    private View view;
-    private FollowService followService;
-    private UserService userService;
+    private final View view;
+    private final FollowService followService;
+    private final UserService userService;
 
     public FollowingPresenter(View view) {
         this.view = view;
@@ -44,10 +44,6 @@ public class FollowingPresenter {
         return isLoading;
     }
 
-    public void setLoading(boolean loading) {
-        isLoading = loading;
-    }
-
     public void getFollowing(User user) {
         if (!isLoading) {   // This guard is important for avoiding a race condition in the scrolling code.
             isLoading = true;
@@ -62,7 +58,7 @@ public class FollowingPresenter {
         view.displayMessage("Getting user's profile...");
     }
 
-    public class GetFollowingObserver implements FollowService.GetFollowingObserver {
+    private class GetFollowingObserver implements FollowService.GetFollowingObserver {
         @Override
         public void handleSuccess(List<User> followees, boolean hasMorePages) {
             isLoading = false;
@@ -87,7 +83,7 @@ public class FollowingPresenter {
         }
     }
 
-    public class GetUserObserver implements UserService.GetUserObserver {
+    private class GetUserObserver implements UserService.GetUserObserver {
         @Override
         public void handleSuccess(User user) {
             view.newUserActivity(user);

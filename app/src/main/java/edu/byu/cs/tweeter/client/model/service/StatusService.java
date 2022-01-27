@@ -2,7 +2,6 @@ package edu.byu.cs.tweeter.client.model.service;
 
 import android.os.Handler;
 import android.os.Message;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -18,7 +17,6 @@ import java.util.concurrent.Executors;
 
 import edu.byu.cs.tweeter.client.cache.Cache;
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.PostStatusTask;
-import edu.byu.cs.tweeter.client.view.main.MainActivity;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
@@ -39,7 +37,7 @@ public class StatusService {
     }
 
     private class PostStatusHandler extends Handler {
-        private PostStatusObserver observer;
+        private final PostStatusObserver observer;
 
         public PostStatusHandler(PostStatusObserver observer) {
             this.observer = observer;

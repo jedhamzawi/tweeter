@@ -84,8 +84,8 @@ public class FeedFragment extends Fragment implements FeedPresenter.View {
 
         feedRecyclerViewAdapter = new FeedRecyclerViewAdapter();
         feedRecyclerView.setAdapter(feedRecyclerViewAdapter);
-
         feedRecyclerView.addOnScrollListener(new FeedRecyclerViewPaginationScrollListener(layoutManager));
+
         presenter = new FeedPresenter(this);
         try {
             presenter.loadMoreItems(user);
@@ -216,7 +216,6 @@ public class FeedFragment extends Fragment implements FeedPresenter.View {
     private class FeedRecyclerViewAdapter extends RecyclerView.Adapter<FeedHolder> {
 
         private final List<Status> feed = new ArrayList<>();
-        private Status lastStatus;
 
         /**
          * Adds new statuses to the list from which the RecyclerView retrieves the statuses it displays

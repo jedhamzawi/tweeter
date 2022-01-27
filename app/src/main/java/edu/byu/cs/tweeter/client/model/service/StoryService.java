@@ -32,7 +32,7 @@ public class StoryService {
      * Message handler (i.e., observer) for GetStoryTask.
      */
     private class GetStoryHandler extends Handler {
-        private GetStoryObserver observer;
+        private final GetStoryObserver observer;
 
         public GetStoryHandler(GetStoryObserver observer) {
             this.observer = observer;

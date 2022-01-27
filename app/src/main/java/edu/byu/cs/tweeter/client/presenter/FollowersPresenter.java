@@ -35,9 +35,6 @@ public class FollowersPresenter {
         return isLoading;
     }
 
-    public void setLoading(boolean loading) {
-        isLoading = loading;
-    }
 
     public boolean hasMorePages() {
         return hasMorePages;
@@ -61,7 +58,7 @@ public class FollowersPresenter {
         view.displayMessage("Getting user profile...");
     }
 
-    public class GetFollowersObserver implements FollowService.GetFollowersObserver {
+    private class GetFollowersObserver implements FollowService.GetFollowersObserver {
         @Override
         public void handleSuccess(List<User> followers, boolean hasMorePages) {
             isLoading = false;
@@ -86,7 +83,7 @@ public class FollowersPresenter {
         }
     }
 
-    public class GetUserObserver implements UserService.GetUserObserver {
+    private class GetUserObserver implements UserService.GetUserObserver {
         @Override
         public void handleSuccess(User user) {
             view.newUserActivity(user);
