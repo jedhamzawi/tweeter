@@ -13,8 +13,11 @@ import java.util.concurrent.Executors;
 
 import edu.byu.cs.tweeter.client.cache.Cache;
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.GetUserTask;
+import edu.byu.cs.tweeter.client.model.service.backgroundTask.LoginTask;
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.LogoutTask;
 import edu.byu.cs.tweeter.client.presenter.FollowingPresenter;
+import edu.byu.cs.tweeter.client.presenter.LoginPresenter;
+import edu.byu.cs.tweeter.client.view.login.LoginFragment;
 import edu.byu.cs.tweeter.client.view.main.MainActivity;
 import edu.byu.cs.tweeter.client.view.main.following.FollowingFragment;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
@@ -24,6 +27,12 @@ public class UserService {
 
     public interface GetUserObserver {
         void handleSuccess(User user);
+        void handleFailure(String message);
+        void handleException(Exception ex);
+    }
+
+    public interface LoginObserver {
+        void handleSuccess(User loggedInUser);
         void handleFailure(String message);
         void handleException(Exception ex);
     }
@@ -38,6 +47,12 @@ public class UserService {
         GetUserTask getUserTask = new GetUserTask(currUserAuthToken, userAlias, new GetUserHandler(getUserObserver));
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(getUserTask);
+    }
+
+    public void loginUser(String alias, String password, LoginObserver loginObserver) {
+        LoginTask loginTask = new LoginTask(alias, password, new LoginHandler(loginObserver));
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(loginTask);
     }
 
     public void logoutUser(AuthToken authToken, LogoutObserver observer) {
@@ -67,6 +82,35 @@ public class UserService {
                 observer.handleFailure(message);
             } else if (msg.getData().containsKey(GetUserTask.EXCEPTION_KEY)) {
                 Exception ex = (Exception) msg.getData().getSerializable(GetUserTask.EXCEPTION_KEY);
+                observer.handleException(ex);
+            }
+        }
+    }
+
+    private class LoginHandler extends Handler {
+        private LoginObserver observer;
+
+        public LoginHandler(LoginObserver observer) {
+            this.observer = observer;
+        }
+
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            boolean success = msg.getData().getBoolean(LoginTask.SUCCESS_KEY);
+            if (success) {
+                User loggedInUser = (User) msg.getData().getSerializable(LoginTask.USER_KEY);
+                AuthToken authToken = (AuthToken) msg.getData().getSerializable(LoginTask.AUTH_TOKEN_KEY);
+
+                // Cache user session information
+                Cache.getInstance().setCurrUser(loggedInUser);
+                Cache.getInstance().setCurrUserAuthToken(authToken);
+
+                observer.handleSuccess(loggedInUser);
+            } else if (msg.getData().containsKey(LoginTask.MESSAGE_KEY)) {
+                String message = msg.getData().getString(LoginTask.MESSAGE_KEY);
+                observer.handleFailure(message);
+            } else if (msg.getData().containsKey(LoginTask.EXCEPTION_KEY)) {
+                Exception ex = (Exception) msg.getData().getSerializable(LoginTask.EXCEPTION_KEY);
                 observer.handleException(ex);
             }
         }
