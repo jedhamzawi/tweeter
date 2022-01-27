@@ -1,19 +1,13 @@
 package edu.byu.cs.tweeter.client.presenter;
 
 
-import android.widget.Toast;
-
 import java.net.MalformedURLException;
 import java.text.ParseException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import edu.byu.cs.tweeter.client.cache.Cache;
 import edu.byu.cs.tweeter.client.model.service.FollowService;
 import edu.byu.cs.tweeter.client.model.service.StatusService;
 import edu.byu.cs.tweeter.client.model.service.UserService;
-import edu.byu.cs.tweeter.client.model.service.backgroundTask.LogoutTask;
-import edu.byu.cs.tweeter.client.view.main.MainActivity;
 import edu.byu.cs.tweeter.model.domain.User;
 
 public class MainPresenter {
@@ -24,7 +18,9 @@ public class MainPresenter {
         void updateFollow(boolean follow);
         void updateUnfollow(boolean unfollow);
         void logoutUser();
-        void cancelPostingTost();
+        void cancelPostingToast();
+        void updateFollowersCount(int count);
+        void updateFollowingCount(int count);
     }
 
     private final View view;
@@ -60,7 +56,14 @@ public class MainPresenter {
 
     public void postStatus(String post) throws ParseException, MalformedURLException {
         statusService.postStatus(post, Cache.getInstance().getCurrUser(), new PostStatusObserver());
+    }
 
+    public void getFollowersCount(User selectedUser) {
+        followService.getFollowersCount(Cache.getInstance().getCurrUserAuthToken(), selectedUser, new GetFollowersCountObserver());
+    }
+
+    public void getFollowingCount(User selectedUser) {
+        followService.getFollowingCount(Cache.getInstance().getCurrUserAuthToken(), selectedUser, new GetFollowingCountObserver());
     }
 
     public class IsFollowerObserver implements FollowService.IsFollowerObserver {
@@ -137,10 +140,9 @@ public class MainPresenter {
     }
 
     public class PostStatusObserver implements StatusService.PostStatusObserver {
-
         @Override
         public void handleSuccess() {
-            view.cancelPostingTost();
+            view.cancelPostingToast();
         }
 
         @Override
@@ -153,4 +155,39 @@ public class MainPresenter {
             view.displayMessage("Failed to post status because of exception: " + ex.getMessage());
         }
     }
+
+    public class GetFollowersCountObserver implements FollowService.GetFollowersCountObserver {
+        @Override
+        public void handleSuccess(int count) {
+            view.updateFollowersCount(count);
+        }
+
+        @Override
+        public void handleFailure(String message) {
+            view.displayMessage("Failed to get followers count: " + message);
+        }
+
+        @Override
+        public void handleException(Exception ex) {
+            view.displayMessage("Failed to get followers count because of exception: " + ex.getMessage());
+        }
+    }
+
+    public class GetFollowingCountObserver implements FollowService.GetFollowingCountObserver {
+        @Override
+        public void handleSuccess(int count) {
+            view.updateFollowingCount(count);
+        }
+
+        @Override
+        public void handleFailure(String message) {
+            view.displayMessage("Failed to get following count: " + message);
+        }
+
+        @Override
+        public void handleException(Exception ex) {
+            view.displayMessage("Failed to get following count because of exception: " + ex.getMessage());
+        }
+    }
+
 }
