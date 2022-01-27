@@ -23,6 +23,18 @@ public class LoginPresenter {
         userService.loginUser(alias, password, new LoginObserver());
     }
 
+    public void validateLogin(String alias, String password) throws IllegalArgumentException {
+        if (alias.charAt(0) != '@') {
+            throw new IllegalArgumentException("Alias must begin with @.");
+        }
+        if (alias.length() < 2) {
+            throw new IllegalArgumentException("Alias must contain 1 or more characters after the @.");
+        }
+        if (password.length() == 0) {
+            throw new IllegalArgumentException("Password cannot be empty.");
+        }
+    }
+
     private class LoginObserver implements UserService.LoginObserver {
 
         @Override

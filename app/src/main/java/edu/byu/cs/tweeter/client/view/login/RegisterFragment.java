@@ -84,7 +84,8 @@ public class RegisterFragment extends Fragment implements RegisterPresenter.View
             public void onClick(View view) {
                 // Register and move to MainActivity.
                 try {
-                    validateRegistration();
+                    presenter.validateRegistration(firstName.getText().toString(), lastName.getText().toString(),
+                            alias.getText().toString(), password.getText().toString(), imageToUpload.getDrawable());
                     errorView.setText(null);
                     registeringToast = Toast.makeText(getContext(), "Registering...", Toast.LENGTH_LONG);
                     registeringToast.show();
@@ -110,31 +111,6 @@ public class RegisterFragment extends Fragment implements RegisterPresenter.View
             Uri selectedImage = data.getData();
             imageToUpload.setImageURI(selectedImage);
             imageUploaderButton.setText(R.string.afterUploadPicture);
-        }
-    }
-
-    public void validateRegistration() {
-        if (firstName.getText().length() == 0) {
-            throw new IllegalArgumentException("First Name cannot be empty.");
-        }
-        if (lastName.getText().length() == 0) {
-            throw new IllegalArgumentException("Last Name cannot be empty.");
-        }
-        if (alias.getText().length() == 0) {
-            throw new IllegalArgumentException("Alias cannot be empty.");
-        }
-        if (alias.getText().charAt(0) != '@') {
-            throw new IllegalArgumentException("Alias must begin with @.");
-        }
-        if (alias.getText().length() < 2) {
-            throw new IllegalArgumentException("Alias must contain 1 or more characters after the @.");
-        }
-        if (password.getText().length() == 0) {
-            throw new IllegalArgumentException("Password cannot be empty.");
-        }
-
-        if (imageToUpload.getDrawable() == null) {
-            throw new IllegalArgumentException("Profile image must be uploaded.");
         }
     }
 
