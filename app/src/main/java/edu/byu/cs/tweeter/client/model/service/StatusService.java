@@ -21,7 +21,7 @@ import edu.byu.cs.tweeter.client.model.service.observer.ServiceObserver;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class StatusService {
+public class StatusService extends Service {
 
     public interface PostStatusObserver extends ServiceObserver {
         void handleSuccess();
@@ -29,10 +29,7 @@ public class StatusService {
 
     public void postStatus(String post, User currUser, String dateTime, List<String> urls, List<String> mentions, PostStatusObserver observer) {
         Status newStatus = new Status(post, currUser, dateTime, urls, mentions);
-        PostStatusTask statusTask = new PostStatusTask(Cache.getInstance().getCurrUserAuthToken(),
-                newStatus, new PostStatusHandler(observer));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(statusTask);
+        executeTask(new PostStatusTask(Cache.getInstance().getCurrUserAuthToken(), newStatus, new PostStatusHandler(observer)));
     }
 
     private class PostStatusHandler extends Handler {

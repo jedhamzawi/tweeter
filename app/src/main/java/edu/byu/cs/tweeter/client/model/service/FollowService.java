@@ -22,7 +22,7 @@ import edu.byu.cs.tweeter.client.presenter.MainPresenter;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class FollowService {
+public class FollowService extends Service {
 
     public interface GetFollowingObserver extends PagedServiceObserver<User> {}
 
@@ -50,50 +50,32 @@ public class FollowService {
 
     public void getFollowing(AuthToken currUserAuthToken, User user, int pageSize, User lastFollowee,
                              GetFollowingObserver getFollowingObserver) {
-        GetFollowingTask getFollowingTask = new GetFollowingTask(currUserAuthToken,
-                user, pageSize, lastFollowee, new GetFollowingHandler(getFollowingObserver));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(getFollowingTask);
+        executeTask(new GetFollowingTask(currUserAuthToken, user, pageSize, lastFollowee, new GetFollowingHandler(getFollowingObserver)));
     }
 
     public void getFollowers(AuthToken currUserAuthToken, User user, int pageSize, User lastFollower,
                              FollowService.GetFollowersObserver getFollowersObserver) {
-        GetFollowersTask getFollowersTask = new GetFollowersTask(currUserAuthToken,
-                user, pageSize, lastFollower, new GetFollowersHandler(getFollowersObserver));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(getFollowersTask);
+        executeTask(new GetFollowersTask(currUserAuthToken, user, pageSize, lastFollower, new GetFollowersHandler(getFollowersObserver)));
     }
 
     public void isFollower(AuthToken token, User currUser, User selectedUser, MainPresenter.IsFollowerObserver isFollowerObserver) {
-        IsFollowerTask isFollowerTask = new IsFollowerTask(token, currUser, selectedUser, new IsFollowerHandler(isFollowerObserver));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(isFollowerTask);
+        executeTask(new IsFollowerTask(token, currUser, selectedUser, new IsFollowerHandler(isFollowerObserver)));
     }
 
     public void follow(AuthToken currUserAuthToken, User selectedUser, MainPresenter.FollowObserver followObserver) {
-        FollowTask followTask = new FollowTask(currUserAuthToken, selectedUser, new FollowHandler(followObserver));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(followTask);
+        executeTask(new FollowTask(currUserAuthToken, selectedUser, new FollowHandler(followObserver)));
     }
 
     public void unfollow(AuthToken currUserAuthToken, User selectedUser, MainPresenter.UnfollowObserver unfollowObserver) {
-        UnfollowTask unfollowTask = new UnfollowTask(currUserAuthToken, selectedUser, new UnfollowHandler(unfollowObserver));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(unfollowTask);
+        executeTask(new UnfollowTask(currUserAuthToken, selectedUser, new UnfollowHandler(unfollowObserver)));
     }
 
     public void getFollowersCount(AuthToken currUserAuthToken, User selectedUser, MainPresenter.GetFollowersCountObserver observer) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        GetFollowersCountTask followersCountTask = new GetFollowersCountTask(currUserAuthToken,
-                selectedUser, new GetFollowersCountHandler(observer));
-        executor.execute(followersCountTask);
+        executeTask(new GetFollowersCountTask(currUserAuthToken, selectedUser, new GetFollowersCountHandler(observer)));
     }
 
     public void getFollowingCount(AuthToken currUserAuthToken, User selectedUser, MainPresenter.GetFollowingCountObserver observer) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        GetFollowingCountTask followingCountTask = new GetFollowingCountTask(currUserAuthToken,
-                selectedUser, new GetFollowingCountHandler(observer));
-        executor.execute(followingCountTask);
+        executeTask(new GetFollowingCountTask(currUserAuthToken, selectedUser, new GetFollowingCountHandler(observer)));
     }
 
     /**

@@ -15,14 +15,11 @@ import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class StoryService {
+public class StoryService extends Service {
     public interface GetStoryObserver extends PagedServiceObserver<Status> {}
 
     public void getStory(AuthToken authToken, User user, int pageSize, Status lastStatus, GetStoryObserver observer) {
-        GetStoryTask getStoryTask = new GetStoryTask(authToken, user, pageSize,
-                lastStatus, new GetStoryHandler(observer));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(getStoryTask);
+        executeTask(new GetStoryTask(authToken, user, pageSize, lastStatus, new GetStoryHandler(observer)));
     }
 
     /**

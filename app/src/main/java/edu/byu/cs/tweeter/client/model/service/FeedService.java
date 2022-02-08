@@ -16,14 +16,11 @@ import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class FeedService {
+public class FeedService extends Service {
     public interface GetFeedObserver extends PagedServiceObserver<Status> {}
 
     public void getFeed(AuthToken currUserAuthToken, User user, int pageSize, Status lastStatus, GetFeedObserver getFeedObserver) {
-        GetFeedTask getFeedTask = new GetFeedTask(currUserAuthToken, user, pageSize,
-                lastStatus, new GetFeedHandler(getFeedObserver));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(getFeedTask);
+        executeTask(new GetFeedTask(currUserAuthToken, user, pageSize, lastStatus, new GetFeedHandler(getFeedObserver)));
     }
 
     /**

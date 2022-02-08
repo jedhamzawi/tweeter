@@ -1,13 +1,10 @@
 package edu.byu.cs.tweeter.client.model.service;
 
-import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Message;
 
 import androidx.annotation.NonNull;
 
-import java.io.ByteArrayOutputStream;
-import java.util.Base64;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,7 +17,7 @@ import edu.byu.cs.tweeter.client.model.service.observer.ServiceObserver;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class UserService {
+public class UserService extends Service {
     public interface GetUserObserver extends ServiceObserver {
         void handleSuccess(User user);
     }
@@ -38,29 +35,19 @@ public class UserService {
     }
 
     public void getUser(AuthToken currUserAuthToken, String userAlias, GetUserObserver getUserObserver) {
-        GetUserTask getUserTask = new GetUserTask(currUserAuthToken, userAlias, new GetUserHandler(getUserObserver));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(getUserTask);
+        executeTask(new GetUserTask(currUserAuthToken, userAlias, new GetUserHandler(getUserObserver)));
     }
 
     public void loginUser(String alias, String password, LoginObserver loginObserver) {
-        LoginTask loginTask = new LoginTask(alias, password, new LoginHandler(loginObserver));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(loginTask);
+        executeTask(new LoginTask(alias, password, new LoginHandler(loginObserver)));
     }
 
     public void logoutUser(AuthToken authToken, LogoutObserver observer) {
-        LogoutTask logoutTask = new LogoutTask(authToken, new LogoutHandler(observer));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(logoutTask);
+        executeTask(new LogoutTask(authToken, new LogoutHandler(observer)));
     }
 
     public void registerUser(String imageBytesBase64, String firstName, String lastName, String alias, String password, RegisterObserver observer) {
-        RegisterTask registerTask = new RegisterTask(firstName, lastName, alias, password,
-                                                    imageBytesBase64, new RegisterHandler(observer));
-
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(registerTask);
+        executeTask(new RegisterTask(firstName, lastName, alias, password, imageBytesBase64, new RegisterHandler(observer)));
     }
 
     /**
