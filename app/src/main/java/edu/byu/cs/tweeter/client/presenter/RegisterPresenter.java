@@ -3,6 +3,9 @@ package edu.byu.cs.tweeter.client.presenter;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 
+import java.io.ByteArrayOutputStream;
+import java.util.Base64;
+
 import edu.byu.cs.tweeter.client.model.service.UserService;
 import edu.byu.cs.tweeter.model.domain.User;
 
@@ -21,7 +24,7 @@ public class RegisterPresenter {
     }
 
     public void registerUser(Bitmap image, String firstName, String lastName, String alias, String password) {
-        userService.registerUser(image, firstName, lastName, alias, password, new RegisterObserver());
+        userService.registerUser(processImage(image), firstName, lastName, alias, password, new RegisterObserver());
     }
 
     public void validateRegistration(String firstName, String lastName, String alias,
@@ -48,6 +51,15 @@ public class RegisterPresenter {
         if (imageToUpload == null) {
             throw new IllegalArgumentException("Profile image must be uploaded.");
         }
+    }
+
+    private String processImage(Bitmap image) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        image.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+        byte[] imageBytes = bos.toByteArray();
+
+        // Intentionally, Use the java Base64 encoder so it is compatible with M4.
+        return Base64.getEncoder().encodeToString(imageBytes);
     }
 
     private class RegisterObserver implements UserService.RegisterObserver {

@@ -62,8 +62,7 @@ public class UserService {
         executor.execute(logoutTask);
     }
 
-    public void registerUser(Bitmap image, String firstName, String lastName, String alias, String password, RegisterObserver observer) {
-        String imageBytesBase64 = processImage(image);
+    public void registerUser(String imageBytesBase64, String firstName, String lastName, String alias, String password, RegisterObserver observer) {
         RegisterTask registerTask = new RegisterTask(firstName, lastName, alias, password,
                                                     imageBytesBase64, new RegisterHandler(observer));
 
@@ -174,14 +173,5 @@ public class UserService {
                 observer.handleException(ex);
             }
         }
-    }
-
-    private String processImage(Bitmap image) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        image.compress(Bitmap.CompressFormat.JPEG, 100, bos);
-        byte[] imageBytes = bos.toByteArray();
-
-        // Intentionally, Use the java Base64 encoder so it is compatible with M4.
-        return Base64.getEncoder().encodeToString(imageBytes);
     }
 }
