@@ -16,32 +16,25 @@ import edu.byu.cs.tweeter.client.model.service.backgroundTask.GetUserTask;
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.LoginTask;
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.LogoutTask;
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.RegisterTask;
+import edu.byu.cs.tweeter.client.model.service.observer.ServiceObserver;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 
 public class UserService {
-    public interface GetUserObserver {
+    public interface GetUserObserver extends ServiceObserver {
         void handleSuccess(User user);
-        void handleFailure(String message);
-        void handleException(Exception ex);
     }
 
-    public interface LoginObserver {
+    public interface LoginObserver extends ServiceObserver {
         void handleSuccess(User loggedInUser);
-        void handleFailure(String message);
-        void handleException(Exception ex);
     }
 
-    public interface LogoutObserver {
+    public interface LogoutObserver extends ServiceObserver {
         void handleSuccess();
-        void handleFailure(String message);
-        void handleException(Exception ex);
     }
 
-    public interface RegisterObserver {
+    public interface RegisterObserver extends ServiceObserver {
         void handleSuccess(User registeredUser);
-        void handleFailure(String message);
-        void handleException(Exception ex);
     }
 
     public void getUser(AuthToken currUserAuthToken, String userAlias, GetUserObserver getUserObserver) {

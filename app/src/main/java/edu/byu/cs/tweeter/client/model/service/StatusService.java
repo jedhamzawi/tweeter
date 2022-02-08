@@ -17,15 +17,14 @@ import java.util.concurrent.Executors;
 
 import edu.byu.cs.tweeter.client.cache.Cache;
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.PostStatusTask;
+import edu.byu.cs.tweeter.client.model.service.observer.ServiceObserver;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
 public class StatusService {
 
-    public interface PostStatusObserver {
+    public interface PostStatusObserver extends ServiceObserver {
         void handleSuccess();
-        void handleFailure(String message);
-        void handleException(Exception ex);
     }
 
     public void postStatus(String post, User currUser, String dateTime, List<String> urls, List<String> mentions, PostStatusObserver observer) {

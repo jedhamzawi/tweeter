@@ -10,16 +10,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.GetStoryTask;
+import edu.byu.cs.tweeter.client.model.service.observer.PagedServiceObserver;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
 public class StoryService {
-    public interface GetStoryObserver {
-        void handleSuccess(List<Status> statuses, boolean hasMorePages);
-        void handleFailure(String message);
-        void handleException(Exception ex);
-    }
+    public interface GetStoryObserver extends PagedServiceObserver<Status> {}
 
     public void getStory(AuthToken authToken, User user, int pageSize, Status lastStatus, GetStoryObserver observer) {
         GetStoryTask getStoryTask = new GetStoryTask(authToken, user, pageSize,

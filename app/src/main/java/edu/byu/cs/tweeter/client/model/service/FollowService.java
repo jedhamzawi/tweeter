@@ -16,52 +16,36 @@ import edu.byu.cs.tweeter.client.model.service.backgroundTask.GetFollowingCountT
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.GetFollowingTask;
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.IsFollowerTask;
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.UnfollowTask;
+import edu.byu.cs.tweeter.client.model.service.observer.PagedServiceObserver;
+import edu.byu.cs.tweeter.client.model.service.observer.ServiceObserver;
 import edu.byu.cs.tweeter.client.presenter.MainPresenter;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 
 public class FollowService {
 
-    public interface GetFollowingObserver {
-        void handleSuccess(List<User> followees, boolean hasMorePages);
-        void handleFailure(String message);
-        void handleException(Exception ex);
-    }
+    public interface GetFollowingObserver extends PagedServiceObserver<User> {}
 
-    public interface GetFollowersObserver {
-        void handleSuccess(List<User> followers, boolean hasMorePages);
-        void handleFailure(String message);
-        void handleException(Exception ex);
-    }
+    public interface GetFollowersObserver extends PagedServiceObserver<User> {}
 
-    public interface IsFollowerObserver {
+    public interface IsFollowerObserver extends ServiceObserver {
         void handleSuccess(boolean isFollower);
-        void handleFailure(String message);
-        void handleException(Exception ex);
     }
 
-    public interface FollowObserver {
+    public interface FollowObserver extends ServiceObserver {
         void handleSuccess();
-        void handleFailure(String message);
-        void handleException(Exception ex);
     }
 
-    public interface UnfollowObserver {
+    public interface UnfollowObserver extends ServiceObserver {
         void handleSuccess();
-        void handleFailure(String message);
-        void handleException(Exception ex);
     }
 
-    public interface GetFollowersCountObserver {
+    public interface GetFollowersCountObserver extends ServiceObserver {
         void handleSuccess(int count);
-        void handleFailure(String message);
-        void handleException(Exception ex);
     }
 
-    public interface GetFollowingCountObserver {
+    public interface GetFollowingCountObserver extends ServiceObserver {
         void handleSuccess(int count);
-        void handleFailure(String message);
-        void handleException(Exception ex);
     }
 
     public void getFollowing(AuthToken currUserAuthToken, User user, int pageSize, User lastFollowee,
