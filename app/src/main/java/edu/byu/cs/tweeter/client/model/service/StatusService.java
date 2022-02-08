@@ -1,22 +1,12 @@
 package edu.byu.cs.tweeter.client.model.service;
 
-import android.os.Handler;
 import android.os.Message;
 
-import androidx.annotation.NonNull;
-
-import java.net.MalformedURLException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import edu.byu.cs.tweeter.client.cache.Cache;
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.PostStatusTask;
+import edu.byu.cs.tweeter.client.model.service.handler.ServiceHandler;
 import edu.byu.cs.tweeter.client.model.service.observer.ServiceObserver;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
@@ -32,7 +22,7 @@ public class StatusService extends Service {
         executeTask(new PostStatusTask(Cache.getInstance().getCurrUserAuthToken(), newStatus, new PostStatusHandler(observer)));
     }
 
-    private class PostStatusHandler extends Handler {
+    private class PostStatusHandler extends ServiceHandler {
         private final PostStatusObserver observer;
 
         public PostStatusHandler(PostStatusObserver observer) {
@@ -40,17 +30,16 @@ public class StatusService extends Service {
         }
 
         @Override
-        public void handleMessage(@NonNull Message msg) {
-            boolean success = msg.getData().getBoolean(PostStatusTask.SUCCESS_KEY);
-            if (success) {
-                observer.handleSuccess();
-            } else if (msg.getData().containsKey(PostStatusTask.MESSAGE_KEY)) {
-                String message = msg.getData().getString(PostStatusTask.MESSAGE_KEY);
-                observer.handleFailure(message);
-            } else if (msg.getData().containsKey(PostStatusTask.EXCEPTION_KEY)) {
-                Exception ex = (Exception) msg.getData().getSerializable(PostStatusTask.EXCEPTION_KEY);
-                observer.handleException(ex);
-            }
+        public void handleSuccess(Message msg) {
+            observer.handleSuccess();
+        }
+        @Override
+        public void handleFailure(String message) {
+            observer.handleFailure(message);
+        }
+        @Override
+        public void handleException(Exception ex) {
+            observer.handleException(ex);
         }
     }
 }
