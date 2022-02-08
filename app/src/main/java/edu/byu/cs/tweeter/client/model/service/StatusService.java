@@ -24,22 +24,14 @@ public class StatusService extends Service {
 
     private class PostStatusHandler extends ServiceHandler {
         private final PostStatusObserver observer;
-
         public PostStatusHandler(PostStatusObserver observer) {
+            super(observer);
             this.observer = observer;
         }
 
         @Override
         public void handleSuccess(Message msg) {
             observer.handleSuccess();
-        }
-        @Override
-        public void handleFailure(String message) {
-            observer.handleFailure(message);
-        }
-        @Override
-        public void handleException(Exception ex) {
-            observer.handleException(ex);
         }
     }
 }

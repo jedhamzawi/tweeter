@@ -6,11 +6,14 @@ import android.os.Message;
 import androidx.annotation.NonNull;
 
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.GetFeedTask;
+import edu.byu.cs.tweeter.client.model.service.observer.ServiceObserver;
 
 public abstract class ServiceHandler extends Handler {
+    protected final ServiceObserver observer;
+
+    public ServiceHandler(ServiceObserver observer) { this.observer = observer; }
+
     public abstract void handleSuccess(Message msg);
-    public abstract void handleFailure(String message);
-    public abstract void handleException(Exception ex);
 
     @Override
     public void handleMessage(@NonNull Message msg) {
@@ -19,10 +22,10 @@ public abstract class ServiceHandler extends Handler {
             handleSuccess(msg);
         } else if (msg.getData().containsKey(GetFeedTask.MESSAGE_KEY)) {
             String message = msg.getData().getString(GetFeedTask.MESSAGE_KEY);
-            handleFailure(message);
+            observer.handleFailure(message);
         } else if (msg.getData().containsKey(GetFeedTask.EXCEPTION_KEY)) {
             Exception ex = (Exception) msg.getData().getSerializable(GetFeedTask.EXCEPTION_KEY);
-            handleException(ex);
+            observer.handleException(ex);
         }
     }
 }

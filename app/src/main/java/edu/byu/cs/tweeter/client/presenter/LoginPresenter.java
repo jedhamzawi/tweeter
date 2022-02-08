@@ -1,19 +1,20 @@
 package edu.byu.cs.tweeter.client.presenter;
 
 import edu.byu.cs.tweeter.client.model.service.UserService;
+import edu.byu.cs.tweeter.client.presenter.view.View;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class LoginPresenter {
+public class LoginPresenter extends Presenter {
 
-    public interface View {
+    public interface LoginView extends View {
         void loginUser(User loggedInUser);
-        void displayMessage(String message);
     }
 
-    private final View view;
+    private final LoginView view;
     private final UserService userService;
 
-    public LoginPresenter(View view) {
+    public LoginPresenter(LoginView view) {
+        super(view);
         this.view = view;
         this.userService = new UserService();
     }

@@ -73,8 +73,8 @@ public class FollowService extends Service {
 
     private class IsFollowerHandler extends ServiceHandler {
         private final IsFollowerObserver observer;
-
         public IsFollowerHandler(IsFollowerObserver observer) {
+            super(observer);
             this.observer = observer;
         }
 
@@ -83,41 +83,25 @@ public class FollowService extends Service {
             boolean isFollower = msg.getData().getBoolean(IsFollowerTask.IS_FOLLOWER_KEY);
             observer.handleSuccess(isFollower);
         }
-        @Override
-        public void handleFailure(String message) {
-            observer.handleFailure(message);
-        }
-        @Override
-        public void handleException(Exception ex) {
-            observer.handleException(ex);
-        }
     }
 
     private class FollowHandler extends ServiceHandler {
         private final FollowObserver observer;
-
         public FollowHandler(FollowObserver observer) {
+            super(observer);
             this.observer = observer;
         }
 
         @Override
         public void handleSuccess(Message msg) {
             observer.handleSuccess();
-        }
-        @Override
-        public void handleFailure(String message) {
-            observer.handleFailure(message);
-        }
-        @Override
-        public void handleException(Exception ex) {
-            observer.handleException(ex);
         }
     }
 
     private class UnfollowHandler extends ServiceHandler {
         private final UnfollowObserver observer;
-
         public UnfollowHandler(UnfollowObserver observer) {
+            super(observer);
             this.observer = observer;
         }
 
@@ -125,20 +109,12 @@ public class FollowService extends Service {
         public void handleSuccess(Message msg) {
             observer.handleSuccess();
         }
-        @Override
-        public void handleFailure(String message) {
-            observer.handleFailure(message);
-        }
-        @Override
-        public void handleException(Exception ex) {
-            observer.handleException(ex);
-        }
     }
 
     private class GetFollowersCountHandler extends ServiceHandler {
         private final GetFollowersCountObserver observer;
-
         public GetFollowersCountHandler(GetFollowersCountObserver observer) {
+            super(observer);
             this.observer = observer;
         }
 
@@ -147,20 +123,12 @@ public class FollowService extends Service {
             int count = msg.getData().getInt(GetFollowersCountTask.COUNT_KEY);
             observer.handleSuccess(count);
         }
-        @Override
-        public void handleFailure(String message) {
-            observer.handleFailure(message);
-        }
-        @Override
-        public void handleException(Exception ex) {
-            observer.handleException(ex);
-        }
     }
 
     private class GetFollowingCountHandler extends ServiceHandler {
         private final GetFollowingCountObserver observer;
-
         public GetFollowingCountHandler(GetFollowingCountObserver observer) {
+            super(observer);
             this.observer = observer;
         }
 
@@ -168,14 +136,6 @@ public class FollowService extends Service {
         public void handleSuccess(Message msg) {
             int count = msg.getData().getInt(GetFollowingCountTask.COUNT_KEY);
             observer.handleSuccess(count);
-        }
-        @Override
-        public void handleFailure(String message) {
-            observer.handleFailure(message);
-        }
-        @Override
-        public void handleException(Exception ex) {
-            observer.handleException(ex);
         }
     }
 }

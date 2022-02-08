@@ -5,29 +5,16 @@ import java.util.List;
 import edu.byu.cs.tweeter.client.cache.Cache;
 import edu.byu.cs.tweeter.client.model.service.FollowService;
 import edu.byu.cs.tweeter.client.model.service.UserService;
+import edu.byu.cs.tweeter.client.presenter.view.PagedView;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class FollowingPresenter {
+public class FollowingPresenter extends PagedPresenter<User> {
 
-    private static final int PAGE_SIZE = 10;
-
-    public interface View {
-        void displayMessage(String message);
-        void setLoadingStatus(boolean value);
-        void addFollowees(List<User> followees);
-        void newUserActivity(User user);
-    }
-
-    private User lastFollowee;
-    private boolean hasMorePages;
-    private boolean isLoading = false;
-
-    private final View view;
     private final FollowService followService;
     private final UserService userService;
 
-    public FollowingPresenter(View view) {
-        this.view = view;
+    public FollowingPresenter(PagedView<User> view) {
+        super(view);
         followService = new FollowService();
         userService = new UserService();
     }
@@ -44,13 +31,10 @@ public class FollowingPresenter {
         return isLoading;
     }
 
-    public void getFollowing(User user) {
-        if (!isLoading) {   // This guard is important for avoiding a race condition in the scrolling code.
-            isLoading = true;
-            view.setLoadingStatus(true);
-            followService.getFollowing(Cache.getInstance().getCurrUserAuthToken(), user, PAGE_SIZE,
-                    lastFollowee, new GetFollowingObserver());
-        }
+    @Override
+    protected void getItems(User user) {
+        followService.getFollowing(Cache.getInstance().getCurrUserAuthToken(), user, PAGE_SIZE,
+                lastItem, new GetFollowingObserver());
     }
 
     public void getUser(String userAlias) {
@@ -58,27 +42,14 @@ public class FollowingPresenter {
         view.displayMessage("Getting user's profile...");
     }
 
-    private class GetFollowingObserver implements FollowService.GetFollowingObserver {
+    private class GetFollowingObserver extends PagedObserver implements FollowService.GetFollowingObserver {
         @Override
-        public void handleSuccess(List<User> followees, boolean hasMorePages) {
-            isLoading = false;
-            view.setLoadingStatus(false);
-            lastFollowee = (followees.size() > 0) ? followees.get(followees.size() - 1) : null;
-            setHasMorePages(hasMorePages);
-            view.addFollowees(followees);
-        }
-
-        @Override
-        public void handleFailure(String message) {
-            isLoading = false;
-            view.setLoadingStatus(false);
+        protected void displayErrorMessage(String message) {
             view.displayMessage("Failed to get following: " + message);
         }
 
         @Override
-        public void handleException(Exception ex) {
-            isLoading = false;
-            view.setLoadingStatus(false);
+        protected void displayExceptionMessage(Exception ex) {
             view.displayMessage("Failed to get following because of exception: " + ex.getMessage());
         }
     }

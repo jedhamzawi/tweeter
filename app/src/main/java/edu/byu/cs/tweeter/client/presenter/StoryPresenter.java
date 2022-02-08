@@ -1,62 +1,28 @@
 package edu.byu.cs.tweeter.client.presenter;
 
-
-import java.util.List;
-
 import edu.byu.cs.tweeter.client.cache.Cache;
 import edu.byu.cs.tweeter.client.model.service.StoryService;
 import edu.byu.cs.tweeter.client.model.service.UserService;
+import edu.byu.cs.tweeter.client.presenter.view.PagedView;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class StoryPresenter {
-    private static final int PAGE_SIZE = 10;
+public class StoryPresenter extends PagedPresenter<Status> {
 
-    public interface View {
-        void displayMessage(String message);
-        void newUserActivity(User user);
-        void setLoadingStatus(boolean value);
-        void addStory(List<Status> statuses);
-    }
-
-    private final View view;
     private final UserService userService;
     private final StoryService storyService;
 
-    private boolean isLoading = false;
-    private boolean hasMorePages;
-    private Status lastStatus;
-
-    public StoryPresenter(View view) {
-        this.view = view;
+    public StoryPresenter(PagedView<Status> view) {
+        super(view);
         this.userService = new UserService();
         this.storyService = new StoryService();
     }
 
-    public boolean isLoading() {
-        return isLoading;
-    }
 
-    public void setLoading(boolean loading) {
-        isLoading = loading;
-    }
-
-    public boolean hasMorePages() {
-        return hasMorePages;
-    }
-
-    public void setHasMorePages(boolean hasMorePages) {
-        this.hasMorePages = hasMorePages;
-    }
-
-    public void getStory(User user) {
-        if (!isLoading) {   // This guard is important for avoiding a race condition in the scrolling code.
-            isLoading = true;
-            view.setLoadingStatus(true);
-            storyService.getStory(Cache.getInstance().getCurrUserAuthToken(), user, PAGE_SIZE, lastStatus,
-                    new GetStoryObserver());
-
-        }
+    @Override
+    protected void getItems(User user) {
+        storyService.getStory(Cache.getInstance().getCurrUserAuthToken(), user, PAGE_SIZE, lastItem,
+                new GetStoryObserver());
     }
 
     public void getUser(String userAlias) {
@@ -64,27 +30,14 @@ public class StoryPresenter {
         view.displayMessage("Getting user profile...");
     }
 
-    private class GetStoryObserver implements StoryService.GetStoryObserver {
+    private class GetStoryObserver extends PagedObserver implements StoryService.GetStoryObserver {
         @Override
-        public void handleSuccess(List<Status> statuses, boolean hasMorePages) {
-            isLoading = false;
-            view.setLoadingStatus(false);
-            lastStatus = (statuses.size() > 0) ? statuses.get(statuses.size() - 1) : null;
-            setHasMorePages(hasMorePages);
-            view.addStory(statuses);
-        }
-
-        @Override
-        public void handleFailure(String message) {
-            isLoading = false;
-            view.setLoadingStatus(false);
+        protected void displayErrorMessage(String message) {
             view.displayMessage("Failed to get story: " + message);
         }
 
         @Override
-        public void handleException(Exception ex) {
-            isLoading = false;
-            view.setLoadingStatus(false);
+        protected void displayExceptionMessage(Exception ex) {
             view.displayMessage("Failed to get story because of exception: " + ex.getMessage());
         }
     }

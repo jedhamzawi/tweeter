@@ -39,8 +39,8 @@ public class UserService extends Service {
      */
     private class GetUserHandler extends ServiceHandler {
         private final GetUserObserver observer;
-
         GetUserHandler(GetUserObserver observer) {
+            super(observer);
             this.observer = observer;
         }
 
@@ -49,20 +49,12 @@ public class UserService extends Service {
             User user = (User) msg.getData().getSerializable(GetUserTask.USER_KEY);
             observer.handleSuccess(user);
         }
-        @Override
-        public void handleFailure(String message) {
-            observer.handleFailure(message);
-        }
-        @Override
-        public void handleException(Exception ex) {
-            observer.handleException(ex);
-        }
     }
 
     private class LoginHandler extends ServiceHandler {
         private final LoginObserver observer;
-
         public LoginHandler(LoginObserver observer) {
+            super(observer);
             this.observer = observer;
         }
 
@@ -77,20 +69,12 @@ public class UserService extends Service {
 
             observer.handleSuccess(loggedInUser);
         }
-        @Override
-        public void handleFailure(String message) {
-            observer.handleFailure(message);
-        }
-        @Override
-        public void handleException(Exception ex) {
-            observer.handleException(ex);
-        }
     }
 
     private class LogoutHandler extends ServiceHandler {
         private final LogoutObserver observer;
-
         public LogoutHandler(LogoutObserver observer) {
+            super(observer);
             this.observer = observer;
         }
 
@@ -98,21 +82,13 @@ public class UserService extends Service {
         public void handleSuccess(Message msg) {
             observer.handleSuccess();
         }
-        @Override
-        public void handleFailure(String message) {
-            observer.handleFailure(message);
-        }
-        @Override
-        public void handleException(Exception ex) {
-            observer.handleException(ex);
-        }
 
     }
 
     private class RegisterHandler extends ServiceHandler {
         private final RegisterObserver observer;
-
         public RegisterHandler(RegisterObserver observer) {
+            super(observer);
             this.observer = observer;
         }
 
@@ -125,14 +101,6 @@ public class UserService extends Service {
             Cache.getInstance().setCurrUserAuthToken(authToken);
 
             observer.handleSuccess(registeredUser);
-        }
-        @Override
-        public void handleFailure(String message) {
-            observer.handleFailure(message);
-        }
-        @Override
-        public void handleException(Exception ex) {
-            observer.handleException(ex);
         }
     }
 }

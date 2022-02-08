@@ -25,13 +25,14 @@ import java.util.List;
 
 import edu.byu.cs.client.R;
 import edu.byu.cs.tweeter.client.presenter.FollowingPresenter;
+import edu.byu.cs.tweeter.client.presenter.view.PagedView;
 import edu.byu.cs.tweeter.client.view.main.MainActivity;
 import edu.byu.cs.tweeter.model.domain.User;
 
 /**
  * Implements the "Following" tab.
  */
-public class FollowingFragment extends Fragment implements FollowingPresenter.View {
+public class FollowingFragment extends Fragment implements PagedView<User> {
 
     private static final String LOG_TAG = "FollowingFragment";
     private static final String USER_KEY = "UserKey";
@@ -80,7 +81,7 @@ public class FollowingFragment extends Fragment implements FollowingPresenter.Vi
         followingRecyclerView.addOnScrollListener(new FollowRecyclerViewPaginationScrollListener(layoutManager));
 
         presenter = new FollowingPresenter(this);
-        presenter.getFollowing(user);
+        presenter.loadMoreItems(user);
 
         return view;
     }
@@ -100,7 +101,7 @@ public class FollowingFragment extends Fragment implements FollowingPresenter.Vi
     }
 
     @Override
-    public void addFollowees(List<User> followees) {
+    public void addItems(List<User> followees) {
         followingRecyclerViewAdapter.addItems(followees);
     }
 
@@ -262,7 +263,7 @@ public class FollowingFragment extends Fragment implements FollowingPresenter.Vi
          * data.
          */
         void loadMoreItems() {
-            presenter.getFollowing(user);
+            presenter.loadMoreItems(user);
         }
 
         /**

@@ -33,6 +33,7 @@ import java.util.List;
 
 import edu.byu.cs.client.R;
 import edu.byu.cs.tweeter.client.presenter.FeedPresenter;
+import edu.byu.cs.tweeter.client.presenter.view.PagedView;
 import edu.byu.cs.tweeter.client.view.main.MainActivity;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
@@ -40,7 +41,7 @@ import edu.byu.cs.tweeter.model.domain.User;
 /**
  * Implements the "Feed" tab.
  */
-public class FeedFragment extends Fragment implements FeedPresenter.View {
+public class FeedFragment extends Fragment implements PagedView<Status> {
     private static final String LOG_TAG = "FeedFragment";
     private static final String USER_KEY = "UserKey";
 
@@ -87,11 +88,7 @@ public class FeedFragment extends Fragment implements FeedPresenter.View {
         feedRecyclerView.addOnScrollListener(new FeedRecyclerViewPaginationScrollListener(layoutManager));
 
         presenter = new FeedPresenter(this);
-        try {
-            presenter.loadMoreItems(user);
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
+        presenter.loadMoreItems(user);
 
         return view;
     }
@@ -109,12 +106,12 @@ public class FeedFragment extends Fragment implements FeedPresenter.View {
     }
 
     @Override
-    public void addStatuses(List<Status> statuses) {
+    public void addItems(List<Status> statuses) {
         feedRecyclerViewAdapter.addItems(statuses);
     }
 
     @Override
-    public void setLoadingStatus(boolean value) throws MalformedURLException {
+    public void setLoadingStatus(boolean value) {
         if (value) {
             feedRecyclerViewAdapter.addLoadingFooter();
         } else {
@@ -325,7 +322,7 @@ public class FeedFragment extends Fragment implements FeedPresenter.View {
          * Adds a dummy status to the list of statuses so the RecyclerView will display a view (the
          * loading footer view) at the bottom of the list.
          */
-        private void addLoadingFooter() throws MalformedURLException {
+        private void addLoadingFooter() {
             addItem(new Status("Dummy Post", new User("firstName", "lastName", "@coolAlias"), "2020-10-31 00:00:00", new ArrayList<String>() {{
                 add("https://youtube.com");
             }}, new ArrayList<String>() {{
