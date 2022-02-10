@@ -14,10 +14,9 @@ import edu.byu.cs.tweeter.client.model.service.StatusService;
 import edu.byu.cs.tweeter.client.model.service.UserService;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class MainPresenter {
+public class MainPresenter extends Presenter {
 
-    public interface View {
-        void displayMessage(String message);
+    public interface MainView extends Presenter.View {
         void updateFollowButton(boolean isFollower);
         void updateFollow(boolean follow);
         void updateUnfollow(boolean unfollow);
@@ -27,13 +26,12 @@ public class MainPresenter {
         void updateFollowingCount(int count);
     }
 
-    private final View view;
     private final FollowService followService;
     private final UserService userService;
     private final StatusService statusService;
 
-    public MainPresenter(View view) {
-        this.view = view;
+    public MainPresenter(MainView view) {
+        super(view);
         followService = new FollowService();
         userService = new UserService();
         statusService = new StatusService();
@@ -58,7 +56,7 @@ public class MainPresenter {
         userService.logoutUser(Cache.getInstance().getCurrUserAuthToken(), new LogoutObserver());
     }
 
-    public void postStatus(String post) throws ParseException, MalformedURLException {
+    public void postStatus(String post) throws ParseException {
         statusService.postStatus(post, Cache.getInstance().getCurrUser(), getFormattedDateTime(), parseURLs(post), parseMentions(post), new PostStatusObserver());
     }
 
@@ -70,7 +68,7 @@ public class MainPresenter {
         followService.getFollowingCount(Cache.getInstance().getCurrUserAuthToken(), selectedUser, new GetFollowingCountObserver());
     }
 
-    private List<String> parseURLs(String post) throws MalformedURLException {
+    private List<String> parseURLs(String post) {
         List<String> containedUrls = new ArrayList<>();
         for (String word : post.split("\\s")) {
             if (word.startsWith("http://") || word.startsWith("https://")) {
@@ -137,7 +135,7 @@ public class MainPresenter {
     public class IsFollowerObserver implements FollowService.IsFollowerObserver {
         @Override
         public void handleSuccess(boolean isFollower) {
-            view.updateFollowButton(isFollower);
+            ((MainView) view).updateFollowButton(isFollower);
         }
 
         @Override
@@ -154,37 +152,37 @@ public class MainPresenter {
     public class FollowObserver implements FollowService.FollowObserver {
         @Override
         public void handleSuccess() {
-            view.updateFollow(true);
+            ((MainView) view).updateFollow(true);
         }
 
         @Override
         public void handleFailure(String message) {
             view.displayMessage("Failed to follow: " + message);
-            view.updateFollow(false);
+            ((MainView) view).updateFollow(false);
         }
 
         @Override
         public void handleException(Exception ex) {
             view.displayMessage("Failed to follow because of exception: " + ex.getMessage());
-            view.updateFollow(false);
+            ((MainView) view).updateFollow(false);
         }
     }
 
     public class UnfollowObserver implements FollowService.UnfollowObserver {
         @Override
         public void handleSuccess() {
-            view.updateUnfollow(true);
+            ((MainView) view).updateUnfollow(true);
         }
 
         @Override
         public void handleFailure(String message) {
-            view.updateUnfollow(false);
+            ((MainView) view).updateUnfollow(false);
             view.displayMessage("Failed to unfollow: " + message);
         }
 
         @Override
         public void handleException(Exception ex) {
-            view.updateUnfollow(false);
+            ((MainView) view).updateUnfollow(false);
             view.displayMessage("Failed to unfollow because of exception: " + ex.getMessage());
         }
     }
@@ -193,7 +191,7 @@ public class MainPresenter {
         @Override
         public void handleSuccess() {
             Cache.getInstance().clearCache();
-            view.logoutUser();
+            ((MainView) view).logoutUser();
         }
 
         @Override
@@ -210,7 +208,7 @@ public class MainPresenter {
     public class PostStatusObserver implements StatusService.PostStatusObserver {
         @Override
         public void handleSuccess() {
-            view.cancelPostingToast();
+            ((MainView) view).cancelPostingToast();
         }
 
         @Override
@@ -227,7 +225,7 @@ public class MainPresenter {
     public class GetFollowersCountObserver implements FollowService.GetFollowersCountObserver {
         @Override
         public void handleSuccess(int count) {
-            view.updateFollowersCount(count);
+            ((MainView) view).updateFollowersCount(count);
         }
 
         @Override
@@ -244,7 +242,7 @@ public class MainPresenter {
     public class GetFollowingCountObserver implements FollowService.GetFollowingCountObserver {
         @Override
         public void handleSuccess(int count) {
-            view.updateFollowingCount(count);
+            ((MainView) view).updateFollowingCount(count);
         }
 
         @Override

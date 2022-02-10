@@ -37,25 +37,21 @@ public class UserService extends Service {
     /**
      * Message handler (i.e., observer) for GetUserTask.
      */
-    private class GetUserHandler extends ServiceHandler {
-        private final GetUserObserver observer;
+    private static class GetUserHandler extends ServiceHandler {
         GetUserHandler(GetUserObserver observer) {
             super(observer);
-            this.observer = observer;
         }
 
         @Override
         public void handleSuccess(Message msg) {
             User user = (User) msg.getData().getSerializable(GetUserTask.USER_KEY);
-            observer.handleSuccess(user);
+            ((GetUserObserver) observer).handleSuccess(user);
         }
     }
 
-    private class LoginHandler extends ServiceHandler {
-        private final LoginObserver observer;
+    private static class LoginHandler extends ServiceHandler {
         public LoginHandler(LoginObserver observer) {
             super(observer);
-            this.observer = observer;
         }
 
         @Override
@@ -63,33 +59,26 @@ public class UserService extends Service {
             User loggedInUser = (User) msg.getData().getSerializable(LoginTask.USER_KEY);
             AuthToken authToken = (AuthToken) msg.getData().getSerializable(LoginTask.AUTH_TOKEN_KEY);
 
-            // Cache user session information
             Cache.getInstance().setCurrUser(loggedInUser);
             Cache.getInstance().setCurrUserAuthToken(authToken);
 
-            observer.handleSuccess(loggedInUser);
+            ((LoginObserver) observer).handleSuccess(loggedInUser);
         }
     }
 
-    private class LogoutHandler extends ServiceHandler {
-        private final LogoutObserver observer;
+    private static class LogoutHandler extends ServiceHandler {
         public LogoutHandler(LogoutObserver observer) {
             super(observer);
-            this.observer = observer;
         }
 
         @Override
-        public void handleSuccess(Message msg) {
-            observer.handleSuccess();
-        }
+        public void handleSuccess(Message msg) { ((LogoutObserver) observer).handleSuccess(); }
 
     }
 
-    private class RegisterHandler extends ServiceHandler {
-        private final RegisterObserver observer;
+    private static class RegisterHandler extends ServiceHandler {
         public RegisterHandler(RegisterObserver observer) {
             super(observer);
-            this.observer = observer;
         }
 
         @Override
@@ -100,7 +89,7 @@ public class UserService extends Service {
             Cache.getInstance().setCurrUser(registeredUser);
             Cache.getInstance().setCurrUserAuthToken(authToken);
 
-            observer.handleSuccess(registeredUser);
+            ((RegisterObserver) observer).handleSuccess(registeredUser);
         }
     }
 }

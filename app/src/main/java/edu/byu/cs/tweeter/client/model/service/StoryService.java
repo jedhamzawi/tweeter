@@ -17,7 +17,7 @@ public class StoryService extends Service {
     /**
      * Message handler (i.e., observer) for GetStoryTask.
      */
-    private class GetStoryHandler extends PagedServiceHandler<Status> {
+    private static class GetStoryHandler extends PagedServiceHandler<Status> {
         public GetStoryHandler(GetStoryObserver observer) { super(observer); }
     }
 }

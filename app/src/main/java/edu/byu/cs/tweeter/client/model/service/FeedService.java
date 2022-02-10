@@ -17,7 +17,7 @@ public class FeedService extends Service {
     /**
      * Message handler (i.e., observer) for GetFeedTask.
      */
-    private class GetFeedHandler extends PagedServiceHandler<Status> {
+    private static class GetFeedHandler extends PagedServiceHandler<Status> {
         public GetFeedHandler(GetFeedObserver observer) { super(observer); }
     }
 }

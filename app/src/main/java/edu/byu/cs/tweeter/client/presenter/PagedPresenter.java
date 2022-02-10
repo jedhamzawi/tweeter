@@ -5,10 +5,16 @@ import java.util.List;
 import edu.byu.cs.tweeter.client.cache.Cache;
 import edu.byu.cs.tweeter.client.model.service.UserService;
 import edu.byu.cs.tweeter.client.model.service.observer.PagedServiceObserver;
-import edu.byu.cs.tweeter.client.presenter.view.PagedView;
 import edu.byu.cs.tweeter.model.domain.User;
 
 public abstract class PagedPresenter<T> extends Presenter {
+
+    public interface PagedView<T> extends View {
+        void setLoadingStatus(boolean value);
+        void addItems(List<T> items);
+        void newUserActivity(User user);
+    }
+
     protected static final int PAGE_SIZE = 10;
 
     protected final UserService userService;

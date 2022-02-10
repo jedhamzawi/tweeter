@@ -60,82 +60,72 @@ public class FollowService extends Service {
     /**
      * Message handler (i.e., observer) for GetFollowingTask.
      */
-    private class GetFollowingHandler extends PagedServiceHandler<User> {
+    private static class GetFollowingHandler extends PagedServiceHandler<User> {
         public GetFollowingHandler(GetFollowingObserver observer) { super(observer); }
     }
 
     /**
      * Message handler (i.e., observer) for GetFollowersTask.
      */
-    private class GetFollowersHandler extends PagedServiceHandler<User> {
+    private static class GetFollowersHandler extends PagedServiceHandler<User> {
         public GetFollowersHandler(GetFollowersObserver observer) { super(observer); }
     }
 
-    private class IsFollowerHandler extends ServiceHandler {
-        private final IsFollowerObserver observer;
+    private static class IsFollowerHandler extends ServiceHandler {
         public IsFollowerHandler(IsFollowerObserver observer) {
             super(observer);
-            this.observer = observer;
         }
 
         @Override
         public void handleSuccess(Message msg) {
             boolean isFollower = msg.getData().getBoolean(IsFollowerTask.IS_FOLLOWER_KEY);
-            observer.handleSuccess(isFollower);
+            ((IsFollowerObserver) observer).handleSuccess(isFollower);
         }
     }
 
-    private class FollowHandler extends ServiceHandler {
-        private final FollowObserver observer;
+    private static class FollowHandler extends ServiceHandler {
         public FollowHandler(FollowObserver observer) {
             super(observer);
-            this.observer = observer;
         }
 
         @Override
         public void handleSuccess(Message msg) {
-            observer.handleSuccess();
+            ((FollowObserver) observer).handleSuccess();
         }
     }
 
-    private class UnfollowHandler extends ServiceHandler {
-        private final UnfollowObserver observer;
+    private static class UnfollowHandler extends ServiceHandler {
         public UnfollowHandler(UnfollowObserver observer) {
             super(observer);
-            this.observer = observer;
         }
 
         @Override
         public void handleSuccess(Message msg) {
-            observer.handleSuccess();
+            ((UnfollowObserver) observer).handleSuccess();
         }
     }
 
-    private class GetFollowersCountHandler extends ServiceHandler {
-        private final GetFollowersCountObserver observer;
+    private static class GetFollowersCountHandler extends ServiceHandler {
         public GetFollowersCountHandler(GetFollowersCountObserver observer) {
             super(observer);
-            this.observer = observer;
         }
 
         @Override
         public void handleSuccess(Message msg) {
             int count = msg.getData().getInt(GetFollowersCountTask.COUNT_KEY);
-            observer.handleSuccess(count);
+            ((GetFollowersCountObserver) observer).handleSuccess(count);
         }
     }
 
-    private class GetFollowingCountHandler extends ServiceHandler {
-        private final GetFollowingCountObserver observer;
+    private static class GetFollowingCountHandler extends ServiceHandler {
         public GetFollowingCountHandler(GetFollowingCountObserver observer) {
             super(observer);
-            this.observer = observer;
         }
 
         @Override
         public void handleSuccess(Message msg) {
             int count = msg.getData().getInt(GetFollowingCountTask.COUNT_KEY);
-            observer.handleSuccess(count);
+            ((GetFollowingCountObserver) observer).handleSuccess(count);
         }
     }
 }

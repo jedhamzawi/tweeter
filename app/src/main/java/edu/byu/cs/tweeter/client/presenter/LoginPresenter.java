@@ -1,7 +1,6 @@
 package edu.byu.cs.tweeter.client.presenter;
 
 import edu.byu.cs.tweeter.client.model.service.UserService;
-import edu.byu.cs.tweeter.client.presenter.view.View;
 import edu.byu.cs.tweeter.model.domain.User;
 
 public class LoginPresenter extends Presenter {
@@ -10,12 +9,10 @@ public class LoginPresenter extends Presenter {
         void loginUser(User loggedInUser);
     }
 
-    private final LoginView view;
     private final UserService userService;
 
     public LoginPresenter(LoginView view) {
         super(view);
-        this.view = view;
         this.userService = new UserService();
     }
 
@@ -37,10 +34,9 @@ public class LoginPresenter extends Presenter {
     }
 
     private class LoginObserver implements UserService.LoginObserver {
-
         @Override
         public void handleSuccess(User loggedInUser) {
-            view.loginUser(loggedInUser);
+            ((LoginView) view).loginUser(loggedInUser);
         }
 
         @Override

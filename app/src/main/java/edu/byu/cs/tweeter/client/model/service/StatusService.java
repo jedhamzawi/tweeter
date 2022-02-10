@@ -22,16 +22,12 @@ public class StatusService extends Service {
         executeTask(new PostStatusTask(Cache.getInstance().getCurrUserAuthToken(), newStatus, new PostStatusHandler(observer)));
     }
 
-    private class PostStatusHandler extends ServiceHandler {
-        private final PostStatusObserver observer;
+    private static class PostStatusHandler extends ServiceHandler {
         public PostStatusHandler(PostStatusObserver observer) {
             super(observer);
-            this.observer = observer;
         }
 
         @Override
-        public void handleSuccess(Message msg) {
-            observer.handleSuccess();
-        }
+        public void handleSuccess(Message msg) { ((PostStatusObserver) observer).handleSuccess(); }
     }
 }

@@ -9,17 +9,16 @@ import java.util.Base64;
 import edu.byu.cs.tweeter.client.model.service.UserService;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class RegisterPresenter {
-    public interface View {
+public class RegisterPresenter extends Presenter {
+
+    public interface RegisterView extends Presenter.View {
         void registerUser(User registeredUser);
-        void displayMessage(String message);
     }
 
-    private final View view;
     private final UserService userService;
 
-    public RegisterPresenter(View view) {
-        this.view = view;
+    public RegisterPresenter(RegisterView view) {
+        super(view);
         this.userService = new UserService();
     }
 
@@ -64,9 +63,7 @@ public class RegisterPresenter {
 
     private class RegisterObserver implements UserService.RegisterObserver {
         @Override
-        public void handleSuccess(User registeredUser) {
-            view.registerUser(registeredUser);
-        }
+        public void handleSuccess(User registeredUser) { ((RegisterView) view).registerUser(registeredUser); }
 
         @Override
         public void handleFailure(String message) {
