@@ -37,6 +37,11 @@ public class MainPresenter extends Presenter {
         statusService = new StatusService();
     }
 
+    public StatusService getStatusService() {
+        if (this.statusService == null) return new StatusService();
+        return this.statusService;
+    }
+
     public void isFollower(User selectedUser) {
         followService.isFollower(Cache.getInstance().getCurrUserAuthToken(), Cache.getInstance().getCurrUser(),
                 selectedUser, new IsFollowerObserver());
@@ -56,8 +61,13 @@ public class MainPresenter extends Presenter {
         userService.logoutUser(Cache.getInstance().getCurrUserAuthToken(), new LogoutObserver());
     }
 
-    public void postStatus(String post) throws ParseException {
-        statusService.postStatus(post, Cache.getInstance().getCurrUser(), getFormattedDateTime(), parseURLs(post), parseMentions(post), new PostStatusObserver());
+    public void postStatus(String post) {
+        PostStatusObserver observer = new PostStatusObserver();
+        try {
+            getStatusService().postStatus(post, Cache.getInstance().getCurrUser(), getFormattedDateTime(), parseURLs(post), parseMentions(post), observer);
+        } catch (Exception e) {
+            observer.handleException(e);
+        }
     }
 
     public void getFollowersCount(User selectedUser) {

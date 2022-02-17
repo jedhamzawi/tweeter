@@ -17,7 +17,7 @@ public class StatusService extends Service {
         void handleSuccess();
     }
 
-    public void postStatus(String post, User currUser, String dateTime, List<String> urls, List<String> mentions, PostStatusObserver observer) {
+    public void postStatus(String post, User currUser, String dateTime, List<String> urls, List<String> mentions, PostStatusObserver observer) throws Exception {
         Status newStatus = new Status(post, currUser, dateTime, urls, mentions);
         executeTask(new PostStatusTask(Cache.getInstance().getCurrUserAuthToken(), newStatus, new PostStatusHandler(observer)));
     }
