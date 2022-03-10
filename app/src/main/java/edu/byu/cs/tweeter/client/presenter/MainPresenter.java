@@ -16,7 +16,7 @@ import edu.byu.cs.tweeter.model.domain.User;
 
 public class MainPresenter extends Presenter {
 
-    public interface MainView extends Presenter.View {
+    public interface MainView extends View {
         void updateFollowButton(boolean isFollower);
         void updateFollow(boolean follow);
         void updateUnfollow(boolean unfollow);

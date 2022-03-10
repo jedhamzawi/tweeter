@@ -11,7 +11,7 @@ import edu.byu.cs.tweeter.model.domain.User;
 
 public class RegisterPresenter extends Presenter {
 
-    public interface RegisterView extends Presenter.View {
+    public interface RegisterView extends View {
         void registerUser(User registeredUser);
     }
 
