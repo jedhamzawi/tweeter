@@ -28,6 +28,10 @@ public class ServerFacade {
         return clientCommunicator.doPost(urlPath, request, null, LoginResponse.class);
     }
 
+    public LogoutResponse logout(LogoutRequest request, String urlPath) throws IOException, TweeterRemoteException {
+        return clientCommunicator.doPost(urlPath, request, null, LogoutResponse.class);
+    }
+
     public RegisterResponse register(RegisterRequest request, String urlPath) throws IOException, TweeterRemoteException {
         return clientCommunicator.doPost(urlPath, request, null, RegisterResponse.class);
     }
