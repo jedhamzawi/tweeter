@@ -1,7 +1,11 @@
 package edu.byu.cs.tweeter.server.service;
 
+import edu.byu.cs.tweeter.model.net.request.FollowRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowingRequest;
+import edu.byu.cs.tweeter.model.net.request.UnfollowRequest;
+import edu.byu.cs.tweeter.model.net.response.FollowResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowingResponse;
+import edu.byu.cs.tweeter.model.net.response.UnfollowResponse;
 import edu.byu.cs.tweeter.server.dao.FollowDAO;
 
 /**
@@ -36,5 +40,33 @@ public class FollowService {
      */
     FollowDAO getFollowingDAO() {
         return new FollowDAO();
+    }
+
+    public FollowResponse follow(FollowRequest request) {
+        if (request.getFollowee() == null) {
+            throw new RuntimeException("[BadRequest] Request needs to have a followee");
+        }
+        /*
+        FIXME: authtoken null checking is broken with dummy data. Fix in production
+        else if (request.getAuthToken()) {
+            throw new RuntimeException("[BadRequest] Request needs to have an authToken");
+         */
+
+        //TODO: Update database to follow
+        return new FollowResponse(true);
+    }
+
+    public UnfollowResponse unfollow(UnfollowRequest request) {
+        if (request.getUnfollowee() == null) {
+            throw new RuntimeException("[BadRequest] Request needs to have an unfollowee");
+        }
+        /*
+        FIXME: authtoken null checking is broken with dummy data. Fix in production
+        else if (request.getAuthToken()) {
+            throw new RuntimeException("[BadRequest] Request needs to have an authToken");
+         */
+
+        //TODO: Update database to follow
+        return new UnfollowResponse(true);
     }
 }

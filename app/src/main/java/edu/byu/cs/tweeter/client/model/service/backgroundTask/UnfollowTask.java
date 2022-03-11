@@ -1,14 +1,25 @@
 package edu.byu.cs.tweeter.client.model.service.backgroundTask;
 
 import android.os.Handler;
+import android.util.Log;
+
+import java.io.IOException;
 
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
+import edu.byu.cs.tweeter.model.net.TweeterRemoteException;
+import edu.byu.cs.tweeter.model.net.request.RegisterRequest;
+import edu.byu.cs.tweeter.model.net.request.UnfollowRequest;
+import edu.byu.cs.tweeter.model.net.response.RegisterResponse;
+import edu.byu.cs.tweeter.model.net.response.UnfollowResponse;
 
 /**
  * Background task that removes a following relationship between two users.
  */
 public class UnfollowTask extends AuthenticatedTask {
+
+    private static final String LOG_TAG = "UnfollowTask";
+    private static final String URL_PATH = "/unfollow";
 
     /**
      * The user that is being followed.
@@ -22,14 +33,18 @@ public class UnfollowTask extends AuthenticatedTask {
 
     @Override
     protected void runTask() {
-        // We could do this from the presenter, without a task and handler, but we will
-        // eventually access the database from here when we aren't using dummy data.
-
-        // Call sendSuccessMessage if successful
-        sendSuccessMessage();
-        // or call sendFailedMessage if not successful
-        // sendFailedMessage()
+        try {
+            UnfollowResponse response = getServerFacade().unfollow(new UnfollowRequest(this.followee, this.authToken), URL_PATH);
+            if (response.isSuccess()) {
+                sendSuccessMessage();
+            }
+            else {
+                sendFailedMessage(response.getMessage());
+            }
+        }
+        catch (IOException | TweeterRemoteException e) {
+            Log.e(LOG_TAG, "Unable to unfollow due to exception: " + e.getMessage());
+            sendExceptionMessage(e);
+        }
     }
-
-
 }
