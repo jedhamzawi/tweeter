@@ -10,6 +10,9 @@ import edu.byu.cs.tweeter.model.domain.Status;
  */
 public class PostStatusTask extends AuthenticatedTask {
 
+    private static final String LOG_TAG = "RegisterTask";
+    private static final String URL_PATH = "/status/post";
+
     /**
      * The new status being sent. Contains all properties of the status,
      * including the identity of the user sending the status.

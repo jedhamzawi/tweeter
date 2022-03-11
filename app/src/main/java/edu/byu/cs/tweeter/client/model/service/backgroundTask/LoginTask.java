@@ -18,7 +18,7 @@ import edu.byu.cs.tweeter.util.Pair;
 public class LoginTask extends AuthenticateTask {
 
     private static final String LOG_TAG = "LoginTask";
-    private static final String URL_PATH = "/login";
+    private static final String URL_PATH = "/user/login";
 
     public LoginTask(String username, String password, Handler messageHandler) {
         super(messageHandler, username, password);
