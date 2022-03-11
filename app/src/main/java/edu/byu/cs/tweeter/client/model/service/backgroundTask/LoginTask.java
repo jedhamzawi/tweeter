@@ -42,10 +42,4 @@ public class LoginTask extends AuthenticateTask {
             sendExceptionMessage(e);
         }
     }
-
-    //TODO: remove
-    @Override
-    protected Pair<User, AuthToken> runAuthenticationTask() {
-        return null;
-    }
 }

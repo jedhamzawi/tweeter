@@ -63,10 +63,4 @@ public class RegisterTask extends AuthenticateTask {
             sendExceptionMessage(e);
         }
     }
-
-    //TODO: Remove
-    @Override
-    protected Pair<User, AuthToken> runAuthenticationTask() {
-        return null;
-    }
 }

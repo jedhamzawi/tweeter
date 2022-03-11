@@ -14,9 +14,4 @@ public abstract class PagedStatusTask extends PagedTask<Status> {
     protected PagedStatusTask(AuthToken authToken, User targetUser, int limit, Status lastItem, Handler messageHandler) {
         super(authToken, targetUser, limit, lastItem, messageHandler);
     }
-
-    @Override
-    protected final List<User> getUsersForItems(List<Status> items) {
-        return items.stream().map(x -> x.user).collect(Collectors.toList());
-    }
 }
