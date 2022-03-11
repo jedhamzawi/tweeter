@@ -1,10 +1,14 @@
 package edu.byu.cs.tweeter.server.service;
 
+import java.util.Random;
+
 import edu.byu.cs.tweeter.model.net.request.FollowRequest;
 import edu.byu.cs.tweeter.model.net.request.FollowingRequest;
+import edu.byu.cs.tweeter.model.net.request.IsFollowerRequest;
 import edu.byu.cs.tweeter.model.net.request.UnfollowRequest;
 import edu.byu.cs.tweeter.model.net.response.FollowResponse;
 import edu.byu.cs.tweeter.model.net.response.FollowingResponse;
+import edu.byu.cs.tweeter.model.net.response.IsFollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.UnfollowResponse;
 import edu.byu.cs.tweeter.server.dao.FollowDAO;
 
@@ -68,5 +72,21 @@ public class FollowService {
 
         //TODO: Update database to follow
         return new UnfollowResponse(true);
+    }
+
+    public IsFollowerResponse isFollower(IsFollowerRequest request) {
+        if (request.getFollower() == null) {
+            throw new RuntimeException("[BadRequest] Request needs to have a follower");
+        }
+        else if (request.getFollowee() == null) {
+            throw new RuntimeException("[BadRequest] Request needs to have a followee");
+        }
+        /*
+        FIXME: authtoken null checking is broken with dummy data. Fix in production
+        else if (request.getAuthToken()) {
+            throw new RuntimeException("[BadRequest] Request needs to have an authToken");
+         */
+
+        return new IsFollowerResponse(new Random().nextInt() > 0);
     }
 }
