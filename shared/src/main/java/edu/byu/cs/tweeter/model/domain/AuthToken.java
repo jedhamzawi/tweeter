@@ -15,8 +15,7 @@ public class AuthToken implements Serializable {
      */
     public String datetime;
 
-    public AuthToken() {
-    }
+    public AuthToken() {}
 
     public AuthToken(String token) {
         this.token = token;

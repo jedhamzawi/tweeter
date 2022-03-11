@@ -6,9 +6,11 @@ import edu.byu.cs.tweeter.model.net.TweeterRemoteException;
 import edu.byu.cs.tweeter.model.net.request.FollowingRequest;
 import edu.byu.cs.tweeter.model.net.request.LoginRequest;
 import edu.byu.cs.tweeter.model.net.request.RegisterRequest;
+import edu.byu.cs.tweeter.model.net.request.UserRequest;
 import edu.byu.cs.tweeter.model.net.response.FollowingResponse;
 import edu.byu.cs.tweeter.model.net.response.LoginResponse;
 import edu.byu.cs.tweeter.model.net.response.RegisterResponse;
+import edu.byu.cs.tweeter.model.net.response.UserResponse;
 
 /**
  * Acts as a Facade to the Tweeter server. All network requests to the server should go through
@@ -48,5 +50,9 @@ public class ServerFacade {
     public FollowingResponse getFollowees(FollowingRequest request, String urlPath)
             throws IOException, TweeterRemoteException {
         return clientCommunicator.doPost(urlPath, request, null, FollowingResponse.class);
+    }
+
+    public UserResponse getUser(UserRequest request, String urlPath) throws IOException, TweeterRemoteException {
+        return clientCommunicator.doPost(urlPath, request, null, UserResponse.class);
     }
 }
