@@ -15,7 +15,7 @@ public class StoryPresenter extends PagedPresenter<Status> {
     }
 
     @Override
-    protected void getItems(User user) {
+    public void getItems(User user) {
         storyService.getStory(Cache.getInstance().getCurrUserAuthToken(), user, PAGE_SIZE, lastItem,
                 new GetStoryObserver());
     }

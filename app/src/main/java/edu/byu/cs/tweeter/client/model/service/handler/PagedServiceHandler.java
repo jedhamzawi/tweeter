@@ -1,12 +1,14 @@
 package edu.byu.cs.tweeter.client.model.service.handler;
 
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 
 import androidx.annotation.NonNull;
 
 import java.util.List;
 
+import edu.byu.cs.tweeter.client.model.service.StoryService;
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.BackgroundTask;
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.GetFollowersTask;
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.PagedTask;
@@ -16,6 +18,7 @@ public class PagedServiceHandler<T> extends Handler {
     private final PagedServiceObserver<T> observer;
 
     public PagedServiceHandler(PagedServiceObserver<T> observer) {
+        super(Looper.getMainLooper());
         this.observer = observer;
     }
 
