@@ -9,9 +9,7 @@ import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.model.net.TweeterRemoteException;
 import edu.byu.cs.tweeter.model.net.request.FollowRequest;
-import edu.byu.cs.tweeter.model.net.request.UnfollowRequest;
 import edu.byu.cs.tweeter.model.net.response.FollowResponse;
-import edu.byu.cs.tweeter.model.net.response.UnfollowResponse;
 
 /**
  * Background task that establishes a following relationship between two users.

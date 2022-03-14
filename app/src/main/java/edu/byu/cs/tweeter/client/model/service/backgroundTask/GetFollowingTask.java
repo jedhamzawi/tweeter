@@ -9,7 +9,6 @@ import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.model.net.TweeterRemoteException;
 import edu.byu.cs.tweeter.model.net.request.GetFollowingRequest;
-import edu.byu.cs.tweeter.model.net.request.PagedRequest;
 import edu.byu.cs.tweeter.model.net.response.PagedResponse;
 
 /**

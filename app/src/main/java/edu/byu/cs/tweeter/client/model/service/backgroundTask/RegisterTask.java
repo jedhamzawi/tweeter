@@ -5,14 +5,9 @@ import android.util.Log;
 
 import java.io.IOException;
 
-import edu.byu.cs.tweeter.model.domain.AuthToken;
-import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.model.net.TweeterRemoteException;
-import edu.byu.cs.tweeter.model.net.request.LoginRequest;
 import edu.byu.cs.tweeter.model.net.request.RegisterRequest;
-import edu.byu.cs.tweeter.model.net.response.LoginResponse;
 import edu.byu.cs.tweeter.model.net.response.RegisterResponse;
-import edu.byu.cs.tweeter.util.Pair;
 
 /**
  * Background task that creates a new user account and logs in the new user (i.e., starts a session).

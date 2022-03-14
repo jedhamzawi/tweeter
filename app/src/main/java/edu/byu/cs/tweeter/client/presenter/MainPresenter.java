@@ -1,6 +1,5 @@
 package edu.byu.cs.tweeter.client.presenter;
 
-import java.net.MalformedURLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;

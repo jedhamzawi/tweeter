@@ -10,7 +10,6 @@ import java.util.List;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.model.net.TweeterRemoteException;
-import edu.byu.cs.tweeter.model.net.request.PagedRequest;
 import edu.byu.cs.tweeter.model.net.response.PagedResponse;
 
 public abstract class PagedTask<T> extends AuthenticatedTask {

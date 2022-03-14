@@ -37,20 +37,6 @@ public class ServerFacade {
         return clientCommunicator.doPost(urlPath, request, null, RegisterResponse.class);
     }
 
-    /**
-     * Returns the users that the user specified in the request is following. Uses information in
-     * the request object to limit the number of followees returned and to return the next set of
-     * followees after any that were returned in a previous request.
-     *
-     * @param request contains information about the user whose followees are to be returned and any
-     *                other information required to satisfy the request.
-     * @return the followees.
-     */
-    public GetFollowingResponse getFollowees(GetFollowingRequest request, String urlPath)
-            throws IOException, TweeterRemoteException {
-        return clientCommunicator.doPost(urlPath, request, null, GetFollowingResponse.class);
-    }
-
     public UserResponse getUser(UserRequest request, String urlPath) throws IOException, TweeterRemoteException {
         return clientCommunicator.doPost(urlPath, request, null, UserResponse.class);
     }

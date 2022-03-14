@@ -5,12 +5,9 @@ import android.util.Log;
 
 import java.io.IOException;
 
-import edu.byu.cs.tweeter.model.domain.AuthToken;
-import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.model.net.TweeterRemoteException;
 import edu.byu.cs.tweeter.model.net.request.LoginRequest;
 import edu.byu.cs.tweeter.model.net.response.LoginResponse;
-import edu.byu.cs.tweeter.util.Pair;
 
 /**
  * Background task that logs in a user (i.e., starts a session).
