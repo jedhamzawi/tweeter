@@ -3,7 +3,7 @@ package edu.byu.cs.tweeter.model.net.request;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class PagedRequest<T> {
+public class PagedRequest<T> implements Request {
     protected User targetUser;
     protected AuthToken authToken;
     protected int limit;

@@ -1,10 +1,19 @@
 package edu.byu.cs.tweeter.server.service;
 
+import com.google.inject.Inject;
+
 import edu.byu.cs.tweeter.model.net.request.GetFeedRequest;
 import edu.byu.cs.tweeter.model.net.response.GetFeedResponse;
 import edu.byu.cs.tweeter.server.dao.StatusDAO;
+import edu.byu.cs.tweeter.server.dao.dynamo.StatusDynamoDAO;
 
 public class FeedService {
+    private final StatusDAO statusDAO;
+
+    @Inject
+    public FeedService(StatusDAO statusDAO) {
+        this.statusDAO = statusDAO;
+    }
 
     public GetFeedResponse getFeed(GetFeedRequest request) {
         if(request.getTargetUser() == null || request.getTargetUser().alias == null) {
@@ -17,11 +26,11 @@ public class FeedService {
     }
 
     /**
-     * Returns an instance of {@link StatusDAO}. Allows mocking of the StatusDAO class
+     * Returns an instance of {@link StatusDynamoDAO}. Allows mocking of the StatusDAO class
      * for testing purposes. All usages of StatusDAO should get their StatusDAO
      * instance from this method to allow for mocking of the instance.
      *
      * @return the instance.
      */
-    public StatusDAO getStatusDAO() { return new StatusDAO(); }
+    public StatusDynamoDAO getStatusDAO() { return new StatusDynamoDAO(); }
 }

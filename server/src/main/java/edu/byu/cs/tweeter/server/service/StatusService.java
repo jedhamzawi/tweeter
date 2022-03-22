@@ -1,10 +1,19 @@
 package edu.byu.cs.tweeter.server.service;
 
+import javax.inject.Inject;
+
 import edu.byu.cs.tweeter.model.net.request.PostStatusRequest;
 import edu.byu.cs.tweeter.model.net.response.PostStatusResponse;
 import edu.byu.cs.tweeter.server.dao.StatusDAO;
+import edu.byu.cs.tweeter.server.dao.dynamo.StatusDynamoDAO;
 
 public class StatusService {
+    private final StatusDAO statusDAO;
+
+    @Inject
+    public StatusService(StatusDAO statusDAO) {
+        this.statusDAO = statusDAO;
+    }
 
     public PostStatusResponse postStatus(PostStatusRequest request) {
         if (request.getStatus() == null) {
@@ -21,11 +30,11 @@ public class StatusService {
     }
 
     /**
-     * Returns an instance of {@link StatusDAO}. Allows mocking of the StatusDAO class
+     * Returns an instance of {@link StatusDynamoDAO}. Allows mocking of the StatusDAO class
      * for testing purposes. All usages of StatusDAO should get their StatusDAO
      * instance from this method to allow for mocking of the instance.
      *
      * @return the instance.
      */
-    public StatusDAO getStatusDAO() { return new StatusDAO(); }
+    public StatusDAO getStatusDAO() { return this.statusDAO; }
 }

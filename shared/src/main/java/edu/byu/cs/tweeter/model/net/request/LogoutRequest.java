@@ -2,7 +2,7 @@ package edu.byu.cs.tweeter.model.net.request;
 
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 
-public class LogoutRequest {
+public class LogoutRequest implements Request {
 
     private AuthToken authToken;
 
@@ -10,7 +10,6 @@ public class LogoutRequest {
      * Allows construction of the object from Json. Private so it won't be called in normal code.
      */
     public LogoutRequest() {}
-
 
     public LogoutRequest(AuthToken authToken) {
         this.authToken = authToken;
