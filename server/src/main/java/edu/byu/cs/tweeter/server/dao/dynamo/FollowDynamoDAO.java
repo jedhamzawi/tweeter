@@ -2,16 +2,23 @@ package edu.byu.cs.tweeter.server.dao.dynamo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import edu.byu.cs.tweeter.model.domain.User;
+import edu.byu.cs.tweeter.model.net.request.FollowRequest;
 import edu.byu.cs.tweeter.model.net.request.GetFollowersCountRequest;
 import edu.byu.cs.tweeter.model.net.request.GetFollowersRequest;
 import edu.byu.cs.tweeter.model.net.request.GetFollowingCountRequest;
 import edu.byu.cs.tweeter.model.net.request.GetFollowingRequest;
+import edu.byu.cs.tweeter.model.net.request.IsFollowerRequest;
+import edu.byu.cs.tweeter.model.net.request.UnfollowRequest;
+import edu.byu.cs.tweeter.model.net.response.FollowResponse;
 import edu.byu.cs.tweeter.model.net.response.GetFollowersCountResponse;
 import edu.byu.cs.tweeter.model.net.response.GetFollowersResponse;
 import edu.byu.cs.tweeter.model.net.response.GetFollowingCountResponse;
 import edu.byu.cs.tweeter.model.net.response.GetFollowingResponse;
+import edu.byu.cs.tweeter.model.net.response.IsFollowerResponse;
+import edu.byu.cs.tweeter.model.net.response.UnfollowResponse;
 import edu.byu.cs.tweeter.server.dao.FollowDAO;
 import edu.byu.cs.tweeter.util.FakeData;
 
@@ -119,6 +126,21 @@ public class FollowDynamoDAO implements FollowDAO {
         }
 
         return new GetFollowersResponse(responseFollowers, hasMorePages);
+    }
+
+    @Override
+    public FollowResponse follow(FollowRequest request) {
+        return new FollowResponse(true);
+    }
+
+    @Override
+    public UnfollowResponse unfollow(UnfollowRequest request) {
+        return new UnfollowResponse(true);
+    }
+
+    @Override
+    public IsFollowerResponse isFollower(IsFollowerRequest request) {
+       return new IsFollowerResponse(new Random().nextInt() > 0);
     }
 
     /**

@@ -32,5 +32,5 @@ public class FeedService {
      *
      * @return the instance.
      */
-    public StatusDynamoDAO getStatusDAO() { return new StatusDynamoDAO(); }
+    public StatusDAO getStatusDAO() { return this.statusDAO; }
 }

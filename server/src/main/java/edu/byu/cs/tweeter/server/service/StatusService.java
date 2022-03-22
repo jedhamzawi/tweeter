@@ -15,6 +15,15 @@ public class StatusService {
         this.statusDAO = statusDAO;
     }
 
+    /**
+     * Returns an instance of {@link StatusDynamoDAO}. Allows mocking of the StatusDAO class
+     * for testing purposes. All usages of StatusDAO should get their StatusDAO
+     * instance from this method to allow for mocking of the instance.
+     *
+     * @return the instance.
+     */
+    public StatusDAO getStatusDAO() { return this.statusDAO; }
+
     public PostStatusResponse postStatus(PostStatusRequest request) {
         if (request.getStatus() == null) {
             throw new RuntimeException("[BadRequest] Missing a username");
@@ -28,13 +37,4 @@ public class StatusService {
 
         return getStatusDAO().postStatus(request);
     }
-
-    /**
-     * Returns an instance of {@link StatusDynamoDAO}. Allows mocking of the StatusDAO class
-     * for testing purposes. All usages of StatusDAO should get their StatusDAO
-     * instance from this method to allow for mocking of the instance.
-     *
-     * @return the instance.
-     */
-    public StatusDAO getStatusDAO() { return this.statusDAO; }
 }

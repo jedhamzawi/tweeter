@@ -33,6 +33,17 @@ public class FollowService {
     }
 
     /**
+     * Returns an instance of {@link FollowDynamoDAO}. Allows mocking of the FollowDAO class
+     * for testing purposes. All usages of FollowDAO should get their FollowDAO
+     * instance from this method to allow for mocking of the instance.
+     *
+     * @return the instance.
+     */
+    FollowDAO getFollowDAO() {
+        return this.followDAO;
+    }
+
+    /**
      * Returns the users that are following the user that is specified. Uses information in
      * the request object to limit the number of followers returned and to return the next set of
      * followers after any that were returned in a previous request. Uses the {@link FollowDynamoDAO} to
@@ -70,17 +81,6 @@ public class FollowService {
         return getFollowDAO().getFollowees(request);
     }
 
-    /**
-     * Returns an instance of {@link FollowDynamoDAO}. Allows mocking of the FollowDAO class
-     * for testing purposes. All usages of FollowDAO should get their FollowDAO
-     * instance from this method to allow for mocking of the instance.
-     *
-     * @return the instance.
-     */
-    FollowDAO getFollowDAO() {
-        return this.followDAO;
-    }
-
     public FollowResponse follow(FollowRequest request) {
         if (request.getFollowee() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have a followee");
@@ -92,7 +92,7 @@ public class FollowService {
          */
 
         //TODO: Update database to follow
-        return new FollowResponse(true);
+        return getFollowDAO().follow(request);
     }
 
     public UnfollowResponse unfollow(UnfollowRequest request) {
@@ -106,7 +106,7 @@ public class FollowService {
          */
 
         //TODO: Update database to follow
-        return new UnfollowResponse(true);
+        return getFollowDAO().unfollow(request);
     }
 
     public IsFollowerResponse isFollower(IsFollowerRequest request) {
@@ -122,7 +122,7 @@ public class FollowService {
             throw new RuntimeException("[BadRequest] Request needs to have an authToken");
          */
 
-        return new IsFollowerResponse(new Random().nextInt() > 0);
+        return getFollowDAO().isFollower(request);
     }
 
     public GetFollowersCountResponse getFollowersCount(GetFollowersCountRequest request) {
