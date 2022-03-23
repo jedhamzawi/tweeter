@@ -54,7 +54,7 @@ public class UserDynamoDAO extends DynamoDAO implements UserDAO {
     public LoginResponse login(LoginRequest request) throws DAOException {
         DBUserData userData = getUserFromDB(request.getUsername());
         if (userData == null) {
-            throw new DAOException("User \"" + request.getUsername() + "\" not found");
+            return new LoginResponse("User not found");
         }
 
         try {
