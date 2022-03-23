@@ -13,7 +13,11 @@ import edu.byu.cs.tweeter.model.net.response.PostStatusResponse;
 import edu.byu.cs.tweeter.server.dao.StatusDAO;
 import edu.byu.cs.tweeter.util.FakeData;
 
-public class StatusDynamoDAO implements StatusDAO {
+public class StatusDynamoDAO extends DynamoDAO implements StatusDAO {
+    public StatusDynamoDAO() {
+        super();
+    }
+
     @Override
     public PostStatusResponse postStatus(PostStatusRequest request) {
         // TODO: post in db

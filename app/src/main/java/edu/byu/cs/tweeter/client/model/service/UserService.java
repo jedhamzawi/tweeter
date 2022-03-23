@@ -30,7 +30,7 @@ public class UserService extends Service {
         executeTask(new LogoutTask(authToken, new LogoutHandler(observer)));
     }
 
-    public void registerUser(String imageBytesBase64, String firstName, String lastName, String alias, String password, RegisterObserver observer) {
+    public void registerUser(byte[] imageBytesBase64, String firstName, String lastName, String alias, String password, RegisterObserver observer) {
         executeTask(new RegisterTask(firstName, lastName, alias, password, imageBytesBase64, new RegisterHandler(observer)));
     }
 

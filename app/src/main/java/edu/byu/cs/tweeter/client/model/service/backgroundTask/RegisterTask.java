@@ -30,10 +30,10 @@ public class RegisterTask extends AuthenticateTask {
     /**
      * The base-64 encoded bytes of the user's profile image.
      */
-    private final String image;
+    private final byte[] image;
 
     public RegisterTask(String firstName, String lastName, String username, String password,
-                        String image, Handler messageHandler) {
+                        byte[] image, Handler messageHandler) {
         super(messageHandler, username, password);
         this.firstName = firstName;
         this.lastName = lastName;
@@ -43,7 +43,8 @@ public class RegisterTask extends AuthenticateTask {
     @Override
     protected void runTask() {
         try {
-            RegisterResponse response = getServerFacade().register(new RegisterRequest(this.username, this.password, image), URL_PATH);
+            RegisterResponse response = getServerFacade().register(
+                    new RegisterRequest(this.username, this.firstName, this.lastName, this.password, image), URL_PATH);
             if (response.isSuccess()) {
                 this.authenticatedUser = response.getUser();
                 this.authToken = response.getAuthToken();

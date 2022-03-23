@@ -2,16 +2,20 @@ package edu.byu.cs.tweeter.model.net.request;
 
 public class RegisterRequest implements Request {
     private String username;
+    private String firstName;
+    private String lastName;
     private String password;
-    private String image;
+    private byte[] image;
 
     /**
      * Allows construction of the object from Json. Private so it won't be called in normal code.
      */
     private RegisterRequest() {}
 
-    public RegisterRequest(String username, String password, String image) {
+    public RegisterRequest(String username, String firstName, String lastName, String password, byte[] image) {
         this.username = username;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.password = password;
         this.image = image;
     }
@@ -24,6 +28,22 @@ public class RegisterRequest implements Request {
         this.username = username;
     }
 
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
     public String getPassword() {
         return password;
     }
@@ -32,11 +52,11 @@ public class RegisterRequest implements Request {
         this.password = password;
     }
 
-    public String getImage() {
+    public byte[] getImage() {
         return image;
     }
 
-    public void setImage(String image) {
+    public void setImage(byte[] image) {
         this.image = image;
     }
 }

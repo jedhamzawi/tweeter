@@ -10,6 +10,7 @@ import edu.byu.cs.tweeter.model.net.response.LoginResponse;
 import edu.byu.cs.tweeter.model.net.response.LogoutResponse;
 import edu.byu.cs.tweeter.model.net.response.RegisterResponse;
 import edu.byu.cs.tweeter.model.net.response.UserResponse;
+import edu.byu.cs.tweeter.server.dao.DAOException;
 import edu.byu.cs.tweeter.server.dao.UserDAO;
 
 public class UserService {
@@ -29,20 +30,23 @@ public class UserService {
             throw new RuntimeException("[BadRequest] Missing a password");
         }
 
-        // TODO: Generates dummy data. Replace with a real implementation.
-        return getUserDAO().login(request);
+        try {
+            return getUserDAO().login(request);
+        } catch (DAOException e) {
+            throw new RuntimeException("[DBError] " + e.getMessage());
+        }
     }
 
     public LogoutResponse logout(LogoutRequest request) {
-        /*
-        FIXME: Null checking is broken using dummy data. Add back in for production
-        if(request.getAuthToken() == null) {
+        if (request.getAuthToken() == null) {
             throw new RuntimeException("[BadRequest] Missing an authToken");
         }
-         */
 
-        // TODO: Delete authToken from db
-        return getUserDAO().logout(request);
+        try {
+            return getUserDAO().logout(request);
+        } catch (DAOException e) {
+            throw new RuntimeException("[DBError] " + e.getMessage());
+        }
     }
 
     public RegisterResponse register(RegisterRequest request) {
@@ -52,22 +56,25 @@ public class UserService {
             throw new RuntimeException("[BadRequest] Missing a password");
         }
 
-        // TODO: Generates dummy data. Replace with a real implementation.
-        return getUserDAO().register(request);
+        try {
+            return getUserDAO().register(request);
+        } catch (DAOException e) {
+            throw new RuntimeException("[DBError] " + e.getMessage());
+        }
     }
 
     public UserResponse getUser(UserRequest request) {
         if(request.getUsername() == null) {
             throw new RuntimeException("[BadRequest] Missing a username");
         }
-        /*
-        FIXME: Null checking is broken using dummy data. Add back in for production
         else if(request.getAuthToken() == null) {
             throw new RuntimeException("[BadRequest] Missing an authToken");
         }
-         */
 
-        // TODO: Generates dummy data. Replace with a real implementation.
-        return getUserDAO().getUser(request);
+        try {
+            return getUserDAO().getUser(request);
+        } catch (DAOException e) {
+            throw new RuntimeException("[DBError] " + e.getMessage());
+        }
     }
 }

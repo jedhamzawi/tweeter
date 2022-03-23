@@ -15,8 +15,10 @@ public class RegisterTest {
     private static final String URL = "/user/register";
     private ServerFacade serverFacade;
     private final String username = "dummy_user";
+    private final String firstName = "dummy";
+    private final String lastName = "name";
     private final String password = "dummy_password";
-    private final String image = "image";
+    private final byte[] image = {};
 
     @Before
     public void setup() {
@@ -25,7 +27,7 @@ public class RegisterTest {
 
     @Test
     public void testSuccessfulRegister() throws IOException, TweeterRemoteException {
-        RegisterResponse response = serverFacade.register(new RegisterRequest(username, password, image), URL);
+        RegisterResponse response = serverFacade.register(new RegisterRequest(username, firstName, lastName, password, image), URL);
 
         Assert.assertNotNull(response);
         Assert.assertTrue(response.isSuccess());
@@ -35,7 +37,7 @@ public class RegisterTest {
     @Test
     public void testFailedRegister() {
         Assert.assertThrows(TweeterRemoteException.class, () ->  {
-            serverFacade.register(new RegisterRequest(null, password, image), URL);
+            serverFacade.register(new RegisterRequest(null, firstName, lastName, password, image), URL);
         });
     }
 }

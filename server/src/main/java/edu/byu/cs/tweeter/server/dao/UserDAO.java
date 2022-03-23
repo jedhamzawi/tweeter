@@ -10,8 +10,8 @@ import edu.byu.cs.tweeter.model.net.response.RegisterResponse;
 import edu.byu.cs.tweeter.model.net.response.UserResponse;
 
 public interface UserDAO {
-    LoginResponse login(LoginRequest login);
-    LogoutResponse logout(LogoutRequest request);
-    RegisterResponse register(RegisterRequest request);
-    UserResponse getUser(UserRequest request);
+    LoginResponse login(LoginRequest login) throws DAOException;
+    LogoutResponse logout(LogoutRequest request) throws DAOException;
+    RegisterResponse register(RegisterRequest request) throws DAOException;
+    UserResponse getUser(UserRequest request) throws DAOException;
 }

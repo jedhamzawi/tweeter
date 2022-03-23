@@ -52,13 +52,10 @@ public class RegisterPresenter extends Presenter {
         }
     }
 
-    private String processImage(Bitmap image) {
+    private byte[] processImage(Bitmap image) {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         image.compress(Bitmap.CompressFormat.JPEG, 100, bos);
-        byte[] imageBytes = bos.toByteArray();
-
-        // Intentionally, Use the java Base64 encoder so it is compatible with M4.
-        return Base64.getEncoder().encodeToString(imageBytes);
+        return bos.toByteArray();
     }
 
     private class RegisterObserver implements UserService.RegisterObserver {
