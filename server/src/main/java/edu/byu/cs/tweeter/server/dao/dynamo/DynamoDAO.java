@@ -13,7 +13,6 @@ import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.server.dao.DAOException;
 
 public class DynamoDAO {
-    protected static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
     protected static final String AWS_REGION = "us-east-2";
     protected static final String TOKEN_TABLE_NAME = "tweeter-tokens";
     protected final AmazonDynamoDB client;
@@ -25,17 +24,5 @@ public class DynamoDAO {
                 .withRegion(AWS_REGION)
                 .build();
         dynamoDB = new DynamoDB(client);
-    }
-
-    protected boolean authenticate(AuthToken token) throws DAOException {
-        try {
-            Table table = dynamoDB.getTable(TOKEN_TABLE_NAME);
-            GetItemSpec spec = new GetItemSpec().withPrimaryKey("auth_token", token.getToken());
-            Item outcome = table.getItem(spec);
-
-            return outcome != null;
-        } catch (Exception e) {
-            throw new DAOException("Unable to authenticate logged in user: " + e.getMessage());
-        }
     }
 }
