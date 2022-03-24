@@ -4,6 +4,7 @@ import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 
 public class UnfollowRequest implements Request {
+    private User loggedInUser;
     private User unfollowee;
     private AuthToken authToken;
 
@@ -12,9 +13,18 @@ public class UnfollowRequest implements Request {
      */
     private UnfollowRequest() {}
 
-    public UnfollowRequest(User unfollowee, AuthToken authToken) {
+    public UnfollowRequest(User loggedInUser, User unfollowee, AuthToken authToken) {
+        this.loggedInUser = loggedInUser;
         this.unfollowee = unfollowee;
         this.authToken = authToken;
+    }
+
+    public User getLoggedInUser() {
+        return loggedInUser;
+    }
+
+    public void setLoggedInUser(User loggedInUser) {
+        this.loggedInUser = loggedInUser;
     }
 
     public AuthToken getAuthToken() {

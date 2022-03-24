@@ -3,6 +3,7 @@ package edu.byu.cs.tweeter.server.service;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 
+import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -118,7 +119,7 @@ public class UserService {
         objectMetadata.setContentType(IMAGE_METADATA);
         String imageURL;
         try {
-            imageURL = getUserDAO().uploadImage(request.getImage(), request.getUsername(), objectMetadata);
+            imageURL = getUserDAO().uploadImage(new ByteArrayInputStream(request.getImage()), request.getUsername(), objectMetadata);
         } catch (DAOException e) {
             throw new RuntimeException("[DBError] Unable to upload image: " + e.getMessage());
         }

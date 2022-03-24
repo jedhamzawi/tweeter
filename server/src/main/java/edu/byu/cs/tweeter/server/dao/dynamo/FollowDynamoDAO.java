@@ -1,6 +1,20 @@
 package edu.byu.cs.tweeter.server.dao.dynamo;
 
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.dynamodbv2.document.Index;
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.ItemCollection;
+import com.amazonaws.services.dynamodbv2.document.PrimaryKey;
+import com.amazonaws.services.dynamodbv2.document.PutItemOutcome;
+import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
+import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
+import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
+
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -19,6 +33,7 @@ import edu.byu.cs.tweeter.model.net.response.GetFollowingCountResponse;
 import edu.byu.cs.tweeter.model.net.response.GetFollowingResponse;
 import edu.byu.cs.tweeter.model.net.response.IsFollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.UnfollowResponse;
+import edu.byu.cs.tweeter.server.dao.DAOException;
 import edu.byu.cs.tweeter.server.dao.FollowDAO;
 import edu.byu.cs.tweeter.util.FakeData;
 
@@ -26,183 +41,108 @@ import edu.byu.cs.tweeter.util.FakeData;
  * A DAO for accessing 'following' data from the database.
  */
 public class FollowDynamoDAO extends DynamoDAO implements FollowDAO {
+    private static final String FOLLOW_TABLE_NAME = "tweeter_follows";
+    private static final String INDEX_NAME = "follower_followee_index";
+    private static final String FOLLOWING_KEY = "followee_alias";
+    private static final String FOLLOWER_KEY = "follower_alias";
 
     public FollowDynamoDAO() {
         super();
     }
 
-    /**
-     * Gets the count of users from the database that the user specified is following. The
-     * current implementation uses generated data and doesn't actually access a database.
-     *
-     * @param request the Request containing the User whose count of how many following is desired.
-     * @return said count.
-     */
-    @Override
-    public GetFollowingCountResponse getFollowingCount(GetFollowingCountRequest request) {
-        // TODO: uses the dummy data.  Replace with a real implementation.
-        assert request.getTargetUser() != null;
-        return new GetFollowingCountResponse(getDummyFollowees().size());
-    }
-
-    /**
-     * Gets the count of users from the database that are following the specified user. The
-     * current implementation uses generated data and doesn't actually access a database.
-     *
-     * @param request the Request containing the User whose count of how many following is desired.
-     * @return said count.
-     */
-    @Override
-    public GetFollowersCountResponse getFollowersCount(GetFollowersCountRequest request) {
-        // TODO: uses the dummy data.  Replace with a real implementation.
-        assert request.getTargetUser() != null;
-        return new GetFollowersCountResponse(getDummyFollowees().size());
-    }
-
-    /**
-     * Gets the users from the database that the user specified in the request is following. Uses
-     * information in the request object to limit the number of followees returned and to return the
-     * next set of followees after any that were returned in a previous request. The current
-     * implementation returns generated data and doesn't actually access a database.
-     *
-     * @param request contains information about the user whose followees are to be returned and any
-     *                other information required to satisfy the request.
-     * @return the followees.
-     */
-    @Override
-    public GetFollowingResponse getFollowees(GetFollowingRequest request) {
-        // TODO: Generates dummy data. Replace with a real implementation.
-        assert request.getLimit() > 0;
-        assert request.getTargetUser() != null;
-        assert request.getTargetUser().getAlias() != null;
-
-        List<User> allFollowees = getDummyFollowees();
-        List<User> responseFollowees = new ArrayList<>(request.getLimit());
-
-        boolean hasMorePages = false;
-
-        if(request.getLimit() > 0) {
-            if (allFollowees != null) {
-                int followeesIndex = getFolloweesStartingIndex(request.getLastItem(), allFollowees);
-
-                for(int limitCounter = 0; followeesIndex < allFollowees.size() && limitCounter < request.getLimit(); followeesIndex++, limitCounter++) {
-                    responseFollowees.add(allFollowees.get(followeesIndex));
-                }
-
-                hasMorePages = followeesIndex < allFollowees.size();
-            }
+    public List<String> getFollowers(String targetAlias, int limit, String lastUserAlias) throws DAOException {
+        QuerySpec querySpec = new QuerySpec().withKeyConditionExpression(FOLLOWING_KEY + " = :fh")
+                .withValueMap(new ValueMap()
+                    .withString(":fh", targetAlias))
+                .withScanIndexForward(true)
+                .withMaxResultSize(limit);
+        if (lastUserAlias != null) {
+            querySpec.withExclusiveStartKey(new PrimaryKey(FOLLOWER_KEY, lastUserAlias));
         }
 
-        return new GetFollowingResponse(responseFollowees, hasMorePages);
+        try {
+            Table table = dynamoDB.getTable(FOLLOW_TABLE_NAME);
+            ItemCollection<QueryOutcome> items = table.query(querySpec);
+            if (items.getLastLowLevelResult().getQueryResult().getLastEvaluatedKey() == null) {
+                return null;
+            }
+            else {
+                return convertResultsToStrings(items, FOLLOWER_KEY);
+            }
+        } catch (AmazonServiceException e) {
+            throw new DAOException(e.getMessage());
+        }
     }
 
-    /**
-     * Gets the users from the database that the user specified in the request is following. Uses
-     * information in the request object to limit the number of followees returned and to return the
-     * next set of followees after any that were returned in a previous request. The current
-     * implementation returns generated data and doesn't actually access a database.
-     *
-     * @param request contains information about the user whose followees are to be returned and any
-     *                other information required to satisfy the request.
-     * @return the followees.
-     */
-    public GetFollowersResponse getFollowers(GetFollowersRequest request) {
-        // TODO: Generates dummy data. Replace with a real implementation.
-        assert request.getLimit() > 0;
-        assert request.getTargetUser() != null;
-        assert request.getTargetUser().getAlias() != null;
-
-        List<User> allFollowers = getDummyFollowers();
-        List<User> responseFollowers = new ArrayList<>(request.getLimit());
-
-        boolean hasMorePages = false;
-
-        if(request.getLimit() > 0) {
-            if (allFollowers != null) {
-                int followeesIndex = getFolloweesStartingIndex(request.getLastItem(), allFollowers);
-
-                for(int limitCounter = 0; followeesIndex < allFollowers.size() && limitCounter < request.getLimit(); followeesIndex++, limitCounter++) {
-                    responseFollowers.add(allFollowers.get(followeesIndex));
-                }
-
-                hasMorePages = followeesIndex < allFollowers.size();
-            }
+    @Override
+    public List<String> getFollowees(String targetAlias, int limit, String lastUserAlias) throws DAOException {
+        QuerySpec querySpec = new QuerySpec().withKeyConditionExpression(FOLLOWER_KEY + " = :fh")
+                .withValueMap(new ValueMap()
+                        .withString(":fh", targetAlias))
+                .withScanIndexForward(true)
+                .withMaxResultSize(limit);
+        if (lastUserAlias != null) {
+            querySpec.withExclusiveStartKey(new PrimaryKey(FOLLOWING_KEY, lastUserAlias));
         }
 
-        return new GetFollowersResponse(responseFollowers, hasMorePages);
-    }
-
-    @Override
-    public FollowResponse follow(FollowRequest request) {
-        return new FollowResponse(true);
-    }
-
-    @Override
-    public UnfollowResponse unfollow(UnfollowRequest request) {
-        return new UnfollowResponse(true);
-    }
-
-    @Override
-    public IsFollowerResponse isFollower(IsFollowerRequest request) {
-       return new IsFollowerResponse(new Random().nextInt() > 0);
-    }
-
-    /**
-     * Determines the index for the first followee in the specified 'allFollowees' list that should
-     * be returned in the current request. This will be the index of the next followee after the
-     * specified 'lastFollowee'.
-     *
-     * @param lastUser the object containing the last user sent to the client
-     * @param allFollowees the generated list of followees from which we are returning paged results.
-     * @return the index of the first followee to be returned.
-     */
-    private int getFolloweesStartingIndex(User lastUser, List<User> allFollowees) {
-
-        int followeesIndex = 0;
-
-        if(lastUser != null && lastUser.getAlias() != null) {
-            // This is a paged request for something after the first page. Find the first item
-            // we should return
-            for (int i = 0; i < allFollowees.size(); i++) {
-                if(lastUser.getAlias().equals(allFollowees.get(i).getAlias())) {
-                    // We found the index of the last item returned last time. Increment to get
-                    // to the first one we should return
-                    followeesIndex = i + 1;
-                    break;
-                }
+        try {
+            Table table = dynamoDB.getTable(FOLLOW_TABLE_NAME);
+            Index index = table.getIndex(INDEX_NAME);
+            ItemCollection<QueryOutcome> items = index.query(querySpec);
+            if (items.getLastLowLevelResult().getQueryResult().getLastEvaluatedKey() == null) {
+                return null;
             }
+            else {
+                return convertResultsToStrings(items, FOLLOWING_KEY);
+            }
+        } catch (AmazonServiceException e) {
+            throw new DAOException(e.getMessage());
         }
-
-        return followeesIndex;
     }
 
-    /**
-     * Returns the list of dummy followee data. This is written as a separate method to allow
-     * mocking of the followees.
-     *
-     * @return the followees.
-     */
-    List<User> getDummyFollowees() {
-        return getFakeData().getFakeUsers();
+    @Override
+    public void putFollower(String followeeAlias, String followerAlias) throws DAOException {
+        try {
+            Table table = dynamoDB.getTable(FOLLOW_TABLE_NAME);
+            table.putItem(new Item()
+                    .withPrimaryKey(FOLLOWING_KEY, followeeAlias, FOLLOWER_KEY, followerAlias));
+        } catch (AmazonServiceException e) {
+            throw new DAOException(e.getMessage());
+        }
     }
 
-    /**
-     * Returns the list of dummy follower data. This is written as a separate method to allow
-     * mocking of the followers.
-     *
-     * @return the followers.
-     */
-    List<User> getDummyFollowers() {
-        return getFakeData().getFakeUsers();
+    @Override
+    public void deleteFollower(String followeeAlias, String followerAlias) throws DAOException {
+        try {
+            Table table = dynamoDB.getTable(FOLLOW_TABLE_NAME);
+            DeleteItemSpec deleteItemSpec = new DeleteItemSpec()
+                    .withPrimaryKey(new PrimaryKey(FOLLOWING_KEY, followeeAlias, FOLLOWER_KEY, followerAlias));
+            table.deleteItem(deleteItemSpec);
+        } catch (AmazonServiceException e) {
+            throw new DAOException(e.getMessage());
+        }
     }
 
-    /**
-     * Returns the {@link FakeData} object used to generate dummy followees.
-     * This is written as a separate method to allow mocking of the {@link FakeData}.
-     *
-     * @return a {@link FakeData} instance.
-     */
-    FakeData getFakeData() {
-        return new FakeData();
+    @Override
+    public boolean isFollower(String loggedInUserAlias, String targetUserAllias) throws DAOException {
+        GetItemSpec spec = new GetItemSpec().withPrimaryKey(FOLLOWING_KEY, loggedInUserAlias, FOLLOWER_KEY, targetUserAllias);
+        try {
+            Table table = dynamoDB.getTable(FOLLOW_TABLE_NAME);
+            Item outcome = table.getItem(spec);
+            return outcome != null;
+        } catch (AmazonServiceException e) {
+            throw new DAOException(e.getMessage());
+        }
+    }
+
+    private List<String> convertResultsToStrings(ItemCollection<QueryOutcome> results, String key) {
+        Iterator<Item> iterator = results.iterator();
+        Item item = null;
+        List<String> strings = new ArrayList<>();
+        while (iterator.hasNext()) {
+            item = iterator.next();
+            strings.add(item.getString(key));
+        }
+        return strings;
     }
 }

@@ -19,20 +19,22 @@ public class UnfollowTask extends AuthenticatedTask {
     private static final String LOG_TAG = "UnfollowTask";
     private static final String URL_PATH = "/unfollow";
 
+    private final User loggedInUser;
     /**
      * The user that is being followed.
      */
     private final User followee;
 
-    public UnfollowTask(AuthToken authToken, User followee, Handler messageHandler) {
+    public UnfollowTask(User loggedInUser, AuthToken authToken, User followee, Handler messageHandler) {
         super(authToken, messageHandler);
+        this.loggedInUser = loggedInUser;
         this.followee = followee;
     }
 
     @Override
     protected void runTask() {
         try {
-            UnfollowResponse response = getServerFacade().unfollow(new UnfollowRequest(this.followee, this.authToken), URL_PATH);
+            UnfollowResponse response = getServerFacade().unfollow(new UnfollowRequest(this.loggedInUser, this.followee, this.authToken), URL_PATH);
             if (response.isSuccess()) {
                 sendSuccessMessage();
             }

@@ -48,12 +48,14 @@ public class MainPresenter extends Presenter {
 
     public void follow(User selectedUser) {
         view.displayMessage("Adding " + selectedUser.getName() + "...");
-        followService.follow(Cache.getInstance().getCurrUserAuthToken(), selectedUser, new FollowObserver());
+        followService.follow(Cache.getInstance().getCurrUser(),
+                Cache.getInstance().getCurrUserAuthToken(), selectedUser, new FollowObserver());
     }
 
     public void unfollow(User selectedUser) {
         view.displayMessage("Removing " + selectedUser.getName() + "...");
-        followService.unfollow(Cache.getInstance().getCurrUserAuthToken(), selectedUser, new UnfollowObserver());
+        followService.unfollow(Cache.getInstance().getCurrUser(),
+                Cache.getInstance().getCurrUserAuthToken(), selectedUser, new UnfollowObserver());
     }
 
     public void logoutUser() {

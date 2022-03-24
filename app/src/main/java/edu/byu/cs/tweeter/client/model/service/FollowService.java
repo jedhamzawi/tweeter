@@ -41,12 +41,12 @@ public class FollowService extends Service {
         executeTask(new IsFollowerTask(token, currUser, selectedUser, new IsFollowerHandler(isFollowerObserver)));
     }
 
-    public void follow(AuthToken currUserAuthToken, User selectedUser, MainPresenter.FollowObserver followObserver) {
-        executeTask(new FollowTask(currUserAuthToken, selectedUser, new FollowHandler(followObserver)));
+    public void follow(User loggedInUser, AuthToken currUserAuthToken, User selectedUser, MainPresenter.FollowObserver followObserver) {
+        executeTask(new FollowTask(loggedInUser, currUserAuthToken, selectedUser, new FollowHandler(followObserver)));
     }
 
-    public void unfollow(AuthToken currUserAuthToken, User selectedUser, MainPresenter.UnfollowObserver unfollowObserver) {
-        executeTask(new UnfollowTask(currUserAuthToken, selectedUser, new UnfollowHandler(unfollowObserver)));
+    public void unfollow(User loggedInUser, AuthToken currUserAuthToken, User selectedUser, MainPresenter.UnfollowObserver unfollowObserver) {
+        executeTask(new UnfollowTask(loggedInUser, currUserAuthToken, selectedUser, new UnfollowHandler(unfollowObserver)));
     }
 
     public void getFollowersCount(AuthToken currUserAuthToken, User selectedUser, MainPresenter.GetFollowersCountObserver observer) {

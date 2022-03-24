@@ -2,11 +2,11 @@ package edu.byu.cs.tweeter.server.dao.dynamo;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.SdkClientException;
-import com.amazonaws.services.dynamodbv2.document.DeleteItemOutcome;
+import com.amazonaws.services.dynamodbv2.document.BatchGetItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.PrimaryKey;
-import com.amazonaws.services.dynamodbv2.document.PutItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes;
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.s3.AmazonS3;
@@ -17,24 +17,13 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 
 import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
-import edu.byu.cs.tweeter.model.net.request.LoginRequest;
-import edu.byu.cs.tweeter.model.net.request.LogoutRequest;
-import edu.byu.cs.tweeter.model.net.request.RegisterRequest;
-import edu.byu.cs.tweeter.model.net.request.UserRequest;
-import edu.byu.cs.tweeter.model.net.response.LoginResponse;
-import edu.byu.cs.tweeter.model.net.response.LogoutResponse;
-import edu.byu.cs.tweeter.model.net.response.RegisterResponse;
-import edu.byu.cs.tweeter.model.net.response.UserResponse;
 import edu.byu.cs.tweeter.server.dao.DAOException;
 import edu.byu.cs.tweeter.server.dao.DBUserData;
 import edu.byu.cs.tweeter.server.dao.UserDAO;
@@ -42,6 +31,7 @@ import edu.byu.cs.tweeter.server.dao.UserDAO;
 public class UserDynamoDAO extends DynamoDAO implements UserDAO {
     private static final String USER_TABLE_NAME = "tweeter-users";
     private static final String BUCKET_NAME = "hamsesh-tweeter";
+    private static final String USER_KEY = "alias";
 
     private final AmazonS3 s3;
 
@@ -58,7 +48,7 @@ public class UserDynamoDAO extends DynamoDAO implements UserDAO {
         Item outcome;
         try {
             Table table = dynamoDB.getTable(USER_TABLE_NAME);
-            GetItemSpec spec = new GetItemSpec().withPrimaryKey("alias", alias);
+            GetItemSpec spec = new GetItemSpec().withPrimaryKey(USER_KEY, alias);
 
             outcome = table.getItem(spec);
         } catch (AmazonServiceException e) {
@@ -87,6 +77,19 @@ public class UserDynamoDAO extends DynamoDAO implements UserDAO {
     }
 
     @Override
+    public List<User> batchGetUsers(List<String> aliases) throws DAOException {
+        TableKeysAndAttributes userTableKeysAndAttributes = new TableKeysAndAttributes(USER_TABLE_NAME);
+        userTableKeysAndAttributes.addHashOnlyPrimaryKey(USER_KEY, aliases.toArray(new String[0]));
+
+        try {
+            BatchGetItemOutcome outcome = dynamoDB.batchGetItem(userTableKeysAndAttributes);
+            return convertItemsToUsers(outcome.getTableItems().get(USER_TABLE_NAME));
+        } catch (AmazonServiceException e) {
+            throw new DAOException(e.getMessage());
+        }
+    }
+
+    @Override
     public void putUser(String alias, String hashedPassword, String salt, String firstName,
                         String lastName, String imageURL, int numFollowers, int numFollowing)
             throws DAOException {
@@ -94,7 +97,7 @@ public class UserDynamoDAO extends DynamoDAO implements UserDAO {
             Table userTable = dynamoDB.getTable(USER_TABLE_NAME);
             userTable.putItem(
                     new Item()
-                            .withPrimaryKey("alias", alias)
+                            .withPrimaryKey(USER_KEY, alias)
                             .withString("password", hashedPassword + salt)
                             .withString("salt", salt)
                             .withString("first_name", firstName)
@@ -133,13 +136,9 @@ public class UserDynamoDAO extends DynamoDAO implements UserDAO {
     }
 
     @Override
-    public String uploadImage(byte[] image, String alias, ObjectMetadata metadata) throws DAOException {
+    public String uploadImage(ByteArrayInputStream image, String alias, ObjectMetadata metadata) throws DAOException {
         try {
-            s3.putObject(new PutObjectRequest(
-                    BUCKET_NAME,
-                    alias + ".png",
-                    new ByteArrayInputStream(image),
-                    metadata)
+            s3.putObject(new PutObjectRequest(BUCKET_NAME, alias + ".png", image, metadata)
                     .withCannedAcl(CannedAccessControlList.PublicRead));
             return ((AmazonS3Client) s3).getResourceUrl(BUCKET_NAME, alias + ".png");
         } catch (SdkClientException e) {
@@ -159,5 +158,103 @@ public class UserDynamoDAO extends DynamoDAO implements UserDAO {
         }
 
         return outcome != null;
+    }
+
+    @Override
+    public int getFollowersCount(String alias) throws DAOException {
+        Item outcome;
+        try {
+            Table table = dynamoDB.getTable(USER_TABLE_NAME);
+            GetItemSpec spec = new GetItemSpec().withPrimaryKey(USER_KEY, alias);
+
+            outcome = table.getItem(spec);
+        } catch (AmazonServiceException e) {
+            throw new DAOException(e.getMessage());
+        }
+
+        if (outcome == null) {
+            return -1;
+        }
+
+        try {
+            return outcome.getInt("num_followers");
+        } catch (NumberFormatException e) {
+            throw new DAOException(e.getMessage());
+        }
+    }
+
+    @Override
+    public int getFollowingCount(String alias) throws DAOException {
+        Item outcome;
+        try {
+            Table table = dynamoDB.getTable(USER_TABLE_NAME);
+            GetItemSpec spec = new GetItemSpec().withPrimaryKey(USER_KEY, alias);
+
+            outcome = table.getItem(spec);
+        } catch (AmazonServiceException e) {
+            throw new DAOException(e.getMessage());
+        }
+
+        if (outcome == null) {
+            return -1;
+        }
+
+        try {
+            return outcome.getInt("num_following");
+        } catch (NumberFormatException e) {
+            throw new DAOException(e.getMessage());
+        }
+    }
+
+    @Override
+    public void incrementFollowerCount(String alias, Integer val) throws DAOException {
+        try {
+            Table table = dynamoDB.getTable(USER_TABLE_NAME);
+
+            Map<String, String> expressionAttributeNames = new HashMap<>();
+            expressionAttributeNames.put("#f", "num_followers");
+
+            Map<String, Object> expressionAttributeValues = new HashMap<>();
+            expressionAttributeValues.put(":val", val);
+
+            table.updateItem(USER_KEY, alias,
+                    "set #f = #f + :val",
+                    expressionAttributeNames,
+                    expressionAttributeValues);
+        } catch (AmazonServiceException e) {
+            throw new DAOException(e.getMessage());
+        }
+    }
+
+    @Override
+    public void incrementFollowingCount(String alias, Integer val) throws DAOException {
+        try {
+            Table table = dynamoDB.getTable(USER_TABLE_NAME);
+
+            Map<String, String> expressionAttributeNames = new HashMap<>();
+            expressionAttributeNames.put("#f", "num_following");
+
+            Map<String, Object> expressionAttributeValues = new HashMap<>();
+            expressionAttributeValues.put(":val", val);
+
+            table.updateItem(USER_KEY, alias,
+                    "set #f = #f + :val",
+                    expressionAttributeNames,
+                    expressionAttributeValues);
+        } catch (AmazonServiceException e) {
+            throw new DAOException(e.getMessage());
+        }
+    }
+
+    private List<User> convertItemsToUsers(List<Item> items) {
+        List<User> users = new ArrayList<>();
+        for (Item item : items) {
+            String firstName = item.getString("first_name");
+            String lastName = item.getString("lastName");
+            String alias = item.getString(USER_KEY);
+            String imageURL = item.getString("image_url");
+            users.add(new User(firstName, lastName, alias, imageURL));
+        }
+        return users;
     }
 }

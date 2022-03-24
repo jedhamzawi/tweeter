@@ -1,6 +1,7 @@
 package edu.byu.cs.tweeter.server.service;
 
-import java.util.Random;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -18,7 +19,9 @@ import edu.byu.cs.tweeter.model.net.response.GetFollowingCountResponse;
 import edu.byu.cs.tweeter.model.net.response.GetFollowingResponse;
 import edu.byu.cs.tweeter.model.net.response.IsFollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.UnfollowResponse;
+import edu.byu.cs.tweeter.server.dao.DAOException;
 import edu.byu.cs.tweeter.server.dao.FollowDAO;
+import edu.byu.cs.tweeter.server.dao.UserDAO;
 import edu.byu.cs.tweeter.server.dao.dynamo.FollowDynamoDAO;
 
 /**
@@ -26,10 +29,12 @@ import edu.byu.cs.tweeter.server.dao.dynamo.FollowDynamoDAO;
  */
 public class FollowService {
     private final FollowDAO followDAO;
+    private final UserDAO userDAO;
 
     @Inject
-    public FollowService(FollowDAO followDAO) {
+    public FollowService(FollowDAO followDAO, UserDAO userDAO) {
         this.followDAO = followDAO;
+        this.userDAO = userDAO;
     }
 
     /**
@@ -39,9 +44,11 @@ public class FollowService {
      *
      * @return the instance.
      */
-    FollowDAO getFollowDAO() {
+    public FollowDAO getFollowDAO() {
         return this.followDAO;
     }
+
+    public UserDAO getUserDAO() { return this.userDAO; }
 
     /**
      * Returns the users that are following the user that is specified. Uses information in
@@ -53,13 +60,30 @@ public class FollowService {
      * @return the followers.
      */
     public GetFollowersResponse getFollowers(GetFollowersRequest request) {
-        if(request.getTargetUser() == null || request.getTargetUser().alias == null) {
+        if (request.getTargetUser() == null || request.getTargetUser().getAlias() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have a follower alias");
-        } else if(request.getLimit() <= 0) {
+        } else if (request.getLimit() <= 0) {
             throw new RuntimeException("[BadRequest] Request needs to have a positive limit");
         }
 
-        return getFollowDAO().getFollowers(request);
+        List<String> followerAliases;
+        try {
+            followerAliases = getFollowDAO().getFollowers(request.getTargetUser().getAlias(),
+                    request.getLimit(), request.getLastItem() != null ? request.getLastItem().getAlias() : null);
+        } catch (DAOException e) {
+            throw new RuntimeException("[DBError] Unable to get list of followers: " + e.getMessage());
+        }
+
+        if (followerAliases == null) {
+            return new GetFollowersResponse(new ArrayList<>(), false);
+        }
+
+        try {
+            return new GetFollowersResponse(getUserDAO().batchGetUsers(followerAliases),
+                    followerAliases.size() == request.getLimit());
+        } catch (DAOException e) {
+            throw new RuntimeException("[DBError] Unable to get users based on followers: " + e.getMessage());
+        }
     }
 
     /**
@@ -72,41 +96,96 @@ public class FollowService {
      * @return the followees.
      */
     public GetFollowingResponse getFollowees(GetFollowingRequest request) {
-        if(request.getTargetUser() == null || request.getTargetUser().alias == null) {
+        if (request.getTargetUser() == null || request.getTargetUser().getAlias() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have a follower alias");
-        } else if(request.getLimit() <= 0) {
+        } else if (request.getLimit() <= 0) {
             throw new RuntimeException("[BadRequest] Request needs to have a positive limit");
         }
 
-        return getFollowDAO().getFollowees(request);
+        List<String> followeeAliases;
+        try {
+            followeeAliases = getFollowDAO().getFollowees(request.getTargetUser().getAlias(),
+                    request.getLimit(), request.getLastItem() != null ? request.getLastItem().getAlias() : null);
+        } catch (DAOException e) {
+            throw new RuntimeException("[DBError] Unable to get list of followees: " + e.getMessage());
+        }
+
+        if (followeeAliases == null) {
+            return new GetFollowingResponse(new ArrayList<>(), false);
+        }
+
+        try {
+            return new GetFollowingResponse(getUserDAO().batchGetUsers(followeeAliases),
+                    followeeAliases.size() == request.getLimit());
+        } catch (DAOException e) {
+            throw new RuntimeException("[DBError] Unable to get users based on followees: " + e.getMessage());
+        }
     }
 
     public FollowResponse follow(FollowRequest request) {
-        if (request.getFollowee() == null) {
+        if (request.getLoggedInUser() == null || request.getLoggedInUser().getAlias() == null) {
+            throw new RuntimeException("[BadRequest] Request needs to have a logged in user");
+        }
+        if (request.getFollowee() == null || request.getFollowee().getAlias() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have a followee");
         }
-        /*
-        FIXME: authtoken null checking is broken with dummy data. Fix in production
-        else if (request.getAuthToken()) {
+        else if (request.getAuthToken() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have an authToken");
-         */
+        }
 
-        //TODO: Update database to follow
-        return getFollowDAO().follow(request);
+        try {
+            getFollowDAO().putFollower(request.getFollowee().getAlias(), request.getLoggedInUser().getAlias());
+        } catch (DAOException e) {
+            throw new RuntimeException("[DBError] Unable to add follower: " + e.getMessage());
+        }
+
+        try {
+            getUserDAO().incrementFollowingCount(request.getLoggedInUser().getAlias(), 1);
+        } catch (DAOException e) {
+            throw new RuntimeException("[DBError] Unable to update following count: " + e.getMessage());
+        }
+
+        try {
+            getUserDAO().incrementFollowerCount(request.getFollowee().getAlias(), 1);
+        } catch (DAOException e) {
+            throw new RuntimeException("[DBError] Unable to update followers count for user \"" +
+                request.getFollowee().getAlias() + "\": " + e.getMessage());
+        }
+
+        return new FollowResponse(true);
     }
 
     public UnfollowResponse unfollow(UnfollowRequest request) {
-        if (request.getUnfollowee() == null) {
+        if (request.getLoggedInUser() == null || request.getLoggedInUser().getAlias() == null) {
+            throw new RuntimeException("[BadRequest] Request needs to have a logged in user");
+        }
+        if (request.getUnfollowee() == null || request.getUnfollowee().getAlias() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have an unfollowee");
         }
-        /*
-        FIXME: authtoken null checking is broken with dummy data. Fix in production
-        else if (request.getAuthToken()) {
+        else if (request.getAuthToken() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have an authToken");
-         */
+        }
 
-        //TODO: Update database to follow
-        return getFollowDAO().unfollow(request);
+        try {
+            getFollowDAO().deleteFollower(request.getUnfollowee().getAlias(), request.getLoggedInUser().getAlias());
+        } catch (DAOException e) {
+            throw new RuntimeException("[DBError] Unable to delete follower: " + e.getMessage());
+        }
+
+        try {
+            getUserDAO().incrementFollowingCount(request.getLoggedInUser().getAlias(), -1);
+        } catch (DAOException e) {
+            throw new RuntimeException("[DBError] Unable to update following count: " + e.getMessage());
+        }
+
+        try {
+            getUserDAO().incrementFollowerCount(request.getUnfollowee().getAlias(), -1);
+        } catch (DAOException e) {
+            throw new RuntimeException("[DBError] Unable to update followers count for user \"" +
+                    request.getUnfollowee().getAlias() + "\": " + e.getMessage());
+        }
+
+        return new UnfollowResponse(true);
     }
 
     public IsFollowerResponse isFollower(IsFollowerRequest request) {
@@ -116,38 +195,69 @@ public class FollowService {
         else if (request.getFollowee() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have a followee");
         }
-        /*
-        FIXME: authtoken null checking is broken with dummy data. Fix in production
-        else if (request.getAuthToken()) {
+        else if (request.getAuthToken() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have an authToken");
-         */
+        }
 
-        return getFollowDAO().isFollower(request);
+        try {
+            if (!getUserDAO().authenticate(request.getAuthToken())) {
+                return new IsFollowerResponse("Unable to authenticate. Try logging out and logging back in.");
+            }
+        } catch (DAOException e) {
+            throw new RuntimeException("[DBError] Unable to authenticate user: " + e.getMessage());
+        }
+
+        try {
+            return new IsFollowerResponse(getFollowDAO().isFollower(request.getFollowee().getAlias(), request.getFollower().getAlias()));
+        } catch (DAOException e) {
+            throw new RuntimeException("[DBError] Unable to determine follow relationship between \"" +
+                request.getFollowee().getAlias() + "\" and \"" + request.getFollower().getAlias() + "\"");
+        }
     }
 
     public GetFollowersCountResponse getFollowersCount(GetFollowersCountRequest request) {
-        if (request.getTargetUser() == null) {
+        if (request.getTargetUser() == null || request.getTargetUser().getAlias() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have a follower");
         }
-        /*
-        FIXME: authtoken null checking is broken with dummy data. Fix in production
-        else if (request.getAuthToken()) {
+        else if (request.getAuthToken() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have an authToken");
-         */
-        return getFollowDAO().getFollowersCount(request);
+        }
+
+        try {
+            if (!getUserDAO().authenticate(request.getAuthToken())) {
+                return new GetFollowersCountResponse("Unable to authenticate. Try logging out and logging back in.");
+            }
+        } catch (DAOException e) {
+            throw new RuntimeException("[DBError] Unable to authenticate user: " + e.getMessage());
+        }
+
+        try {
+            return new GetFollowersCountResponse(getUserDAO().getFollowersCount(request.getTargetUser().getAlias()));
+        } catch (DAOException e) {
+            throw new RuntimeException("[DBError] Unable to get follower count: " + e.getMessage());
+        }
     }
 
     public GetFollowingCountResponse getFollowingCount(GetFollowingCountRequest request) {
-        if (request.getTargetUser() == null) {
+        if (request.getTargetUser() == null || request.getTargetUser().getAlias() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have a follower");
         }
-        /*
-        FIXME: authtoken null checking is broken with dummy data. Fix in production
-        else if (request.getAuthToken()) {
+        else if (request.getAuthToken() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have an authToken");
-         */
+        }
 
-        //TODO: Get real count from db
-        return getFollowDAO().getFollowingCount(request);
+        try {
+            if (!getUserDAO().authenticate(request.getAuthToken())) {
+                return new GetFollowingCountResponse("Unable to authenticate. Try logging out and logging back in.");
+            }
+        } catch (DAOException e) {
+            throw new RuntimeException("[DBError] Unable to authenticate user: " + e.getMessage());
+        }
+
+        try {
+            return new GetFollowingCountResponse(getUserDAO().getFollowingCount(request.getTargetUser().getAlias()));
+        } catch (DAOException e) {
+            throw new RuntimeException("[DBError] Unable to get followee count: " + e.getMessage());
+        }
     }
 }
