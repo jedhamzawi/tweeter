@@ -28,7 +28,7 @@ public class UserRequest implements Request {
         return authToken;
     }
 
-    public void setPassword(AuthToken authToken) {
+    public void setAuthToken(AuthToken authToken) {
         this.authToken = authToken;
     }
 }

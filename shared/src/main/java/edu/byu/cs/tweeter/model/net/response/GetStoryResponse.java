@@ -5,8 +5,8 @@ import java.util.List;
 import edu.byu.cs.tweeter.model.domain.Status;
 
 public class GetStoryResponse extends PagedResponse<Status> {
-    public GetStoryResponse(boolean success, boolean hasMorePages) {
-        super(success, hasMorePages);
+    public GetStoryResponse(String message) {
+        super(message);
     }
 
     public GetStoryResponse(boolean success, String message, boolean hasMorePages) {

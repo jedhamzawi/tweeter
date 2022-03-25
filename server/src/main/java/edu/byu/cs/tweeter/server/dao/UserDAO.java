@@ -7,9 +7,10 @@ import java.util.List;
 
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
+import edu.byu.cs.tweeter.server.dao.model.UserDBData;
 
 public interface UserDAO {
-    DBUserData getUser(String alias) throws DAOException;
+    UserDBData getUser(String alias) throws DAOException;
     List<User> batchGetUsers(List<String> aliases) throws DAOException;
     void putUser(String alias, String hashedPassword, String salt, String firstName,
                            String lastName, String imageURL, int numFollowers, int numFollowing)
@@ -17,7 +18,7 @@ public interface UserDAO {
     void putAuthToken(AuthToken authToken) throws DAOException;
     void deleteAuthToken(AuthToken authToken) throws DAOException;
     String uploadImage(ByteArrayInputStream image, String alias, ObjectMetadata metadata) throws DAOException;
-    boolean authenticate(AuthToken token) throws DAOException;
+    boolean authenticate(AuthToken token, long currentDatetime) throws DAOException;
     int getFollowersCount(String alias) throws DAOException;
     int getFollowingCount(String alias) throws DAOException;
     void incrementFollowerCount(String alias, Integer val) throws DAOException;

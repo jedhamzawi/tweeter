@@ -1,140 +1,193 @@
 package edu.byu.cs.tweeter.server.dao.dynamo;
 
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.dynamodbv2.document.BatchGetItemOutcome;
+import com.amazonaws.services.dynamodbv2.document.BatchWriteItemOutcome;
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.ItemCollection;
+import com.amazonaws.services.dynamodbv2.document.PrimaryKey;
+import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
+import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes;
+import com.amazonaws.services.dynamodbv2.document.TableWriteItems;
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
+import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
+import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes;
+import com.amazonaws.services.dynamodbv2.model.WriteRequest;
+
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import edu.byu.cs.tweeter.model.domain.Status;
-import edu.byu.cs.tweeter.model.net.request.GetFeedRequest;
-import edu.byu.cs.tweeter.model.net.request.GetStoryRequest;
-import edu.byu.cs.tweeter.model.net.request.PostStatusRequest;
-import edu.byu.cs.tweeter.model.net.response.GetFeedResponse;
-import edu.byu.cs.tweeter.model.net.response.GetStoryResponse;
-import edu.byu.cs.tweeter.model.net.response.PostStatusResponse;
+import edu.byu.cs.tweeter.server.dao.DAOException;
 import edu.byu.cs.tweeter.server.dao.StatusDAO;
-import edu.byu.cs.tweeter.util.FakeData;
+import edu.byu.cs.tweeter.server.dao.model.StatusDBData;
+import edu.byu.cs.tweeter.server.service.Service;
 
 public class StatusDynamoDAO extends DynamoDAO implements StatusDAO {
+    private static final String STORY_TABLE_NAME = "tweeter-stories";
+    private static final String FEED_TABLE_NAME = "tweeter-feeds";
+    private static final String STATUS_KEY = "status_id";
+    private static final String POST_KEY = "post";
+    private static final String MENTIONS_KEY = "mentions";
+    private static final String URLS_KEY = "urls";
+    private static final String DATETIME_KEY = "datetime";
+    private static final String USER_KEY = "alias";
+    private static final String POSTER_KEY = "poster_alias";
+
     public StatusDynamoDAO() {
         super();
     }
 
     @Override
-    public PostStatusResponse postStatus(PostStatusRequest request) {
-        // TODO: post in db
-        return new PostStatusResponse(true);
+    public void postStatusToStory(String posterAlias, String post, String mentions, String urls,
+                                  String datetime, String statusID) throws DAOException {
+        try {
+            Table table = dynamoDB.getTable(STORY_TABLE_NAME);
+            table.putItem(new Item()
+                    .withPrimaryKey(USER_KEY, posterAlias, STATUS_KEY, statusID)
+                    .withString(POST_KEY, post)
+                    .withString(MENTIONS_KEY, mentions)
+                    .withString(URLS_KEY, urls)
+                    .withString(DATETIME_KEY, datetime)
+                    .withString(STATUS_KEY, statusID));
+        } catch (AmazonServiceException e) {
+            throw new DAOException(e.getMessage());
+        }
     }
 
-    /**
-     * Gets the users from the database that the user specified in the request is following. Uses
-     * information in the request object to limit the number of followees returned and to return the
-     * next set of followees after any that were returned in a previous request. The current
-     * implementation returns generated data and doesn't actually access a database.
-     *
-     * @param request contains information about the user whose followees are to be returned and any
-     *                other information required to satisfy the request.
-     * @return the followees.
-     */
     @Override
-    public GetFeedResponse getFeed(GetFeedRequest request) {
-        // TODO: Generates dummy data. Replace with a real implementation.
-        assert request.getLimit() > 0;
-        assert request.getTargetUser() != null;
-        assert request.getTargetUser().getAlias() != null;
-
-        List<Status> allStatuses = getDummyFeed();
-        List<Status> responseStatuses = new ArrayList<>(request.getLimit());
-
-        boolean hasMorePages = false;
-
-        if(request.getLimit() > 0) {
-            if (allStatuses != null) {
-                int followeesIndex = getStatusesStartingIndex(request.getLastItem(), allStatuses);
-
-                for(int limitCounter = 0; followeesIndex < allStatuses.size() && limitCounter < request.getLimit(); followeesIndex++, limitCounter++) {
-                    responseStatuses.add(allStatuses.get(followeesIndex));
-                }
-
-                hasMorePages = followeesIndex < allStatuses.size();
-            }
+    public void postStatusToFeeds(String statusID, List<String> followerAliases, String posterAlias) throws DAOException {
+        List<Item> items = new ArrayList<>();
+        for (String follower : followerAliases) {
+            System.out.printf("Added %s to the list of items to add%n", follower);
+            items.add(new Item().withPrimaryKey(USER_KEY, follower, STATUS_KEY, statusID).withString(POSTER_KEY, posterAlias));
         }
+        TableWriteItems feedTableWriteItems = new TableWriteItems(FEED_TABLE_NAME).withItemsToPut(items);
 
-        return new GetFeedResponse(responseStatuses, hasMorePages);
+        try {
+            BatchWriteItemOutcome outcome = dynamoDB.batchWriteItem(feedTableWriteItems);
+            Map<String, List<WriteRequest>> unprocessedItems = outcome.getUnprocessedItems();
+            double retries = 0;
+            while (unprocessedItems.size() > 0) {
+                retries++;
+                if (retries > 8) throw new DAOException("Too many attempts to put statuses");
+                expWait(retries);
+                outcome = dynamoDB.batchWriteItemUnprocessed(unprocessedItems);
+                unprocessedItems = outcome.getUnprocessedItems();
+            }
+        } catch (AmazonServiceException e) {
+            throw new DAOException(e.getMessage());
+        }
     }
 
-    /**
-     * Gets the users from the database that the user specified in the request is following. Uses
-     * information in the request object to limit the number of followees returned and to return the
-     * next set of followees after any that were returned in a previous request. The current
-     * implementation returns generated data and doesn't actually access a database.
-     *
-     * @param request contains information about the user whose followees are to be returned and any
-     *                other information required to satisfy the request.
-     * @return the followees.
-     */
     @Override
-    public GetStoryResponse getStory(GetStoryRequest request) {
-        // TODO: Generates dummy data. Replace with a real implementation.
-        assert request.getLimit() > 0;
-        assert request.getTargetUser() != null;
-        assert request.getTargetUser().getAlias() != null;
-
-        List<Status> allStatuses = getDummyFeed();
-        List<Status> responseStatuses = new ArrayList<>(request.getLimit());
-
-        boolean hasMorePages = false;
-
-        if(request.getLimit() > 0) {
-            if (allStatuses != null) {
-                int followeesIndex = getStatusesStartingIndex(request.getLastItem(), allStatuses);
-
-                for(int limitCounter = 0; followeesIndex < allStatuses.size() && limitCounter < request.getLimit(); followeesIndex++, limitCounter++) {
-                    responseStatuses.add(allStatuses.get(followeesIndex));
-                }
-
-                hasMorePages = followeesIndex < allStatuses.size();
-            }
+    public List<String> getFeedStatusInfo(String alias, int limit, String lastStatusID) throws DAOException {
+        QuerySpec querySpec = new QuerySpec().withKeyConditionExpression(USER_KEY + " = :a")
+                .withValueMap(new ValueMap()
+                        .withString(":a", alias))
+                .withScanIndexForward(false)
+                .withMaxResultSize(limit);
+        if (lastStatusID != null) {
+            querySpec.withExclusiveStartKey(new PrimaryKey(USER_KEY, alias, STATUS_KEY, lastStatusID));
         }
 
-        return new GetStoryResponse(responseStatuses, hasMorePages);
+        try {
+            Table table = dynamoDB.getTable(FEED_TABLE_NAME);
+            ItemCollection<QueryOutcome> items = table.query(querySpec);
+            if (items == null) return null;
+            else {
+                return convertResultsToStrings(items, POSTER_KEY, STATUS_KEY);
+            }
+        } catch (AmazonServiceException e) {
+            throw new DAOException(e.getMessage());
+        }
     }
 
-    private int getStatusesStartingIndex(Status lastStatus, List<Status> allStatuses) {
+    public List<StatusDBData> getFeed(List<String> alternatingVals) throws DAOException {
+        TableKeysAndAttributes storyTableKeysAndAttributes = new TableKeysAndAttributes(STORY_TABLE_NAME);
+        storyTableKeysAndAttributes.addHashAndRangePrimaryKeys(USER_KEY, STATUS_KEY, alternatingVals.toArray(new String[alternatingVals.size()]));
 
-        int followeesIndex = 0;
-
-        if(lastStatus != null && lastStatus.getPost() != null) {
-            // This is a paged request for something after the first page. Find the first item
-            // we should return
-            for (int i = 0; i < allStatuses.size(); i++) {
-                if(lastStatus.getPost().equals(allStatuses.get(i).getPost())) {
-                    // We found the index of the last item returned last time. Increment to get
-                    // to the first one we should return
-                    followeesIndex = i + 1;
-                    break;
-                }
+        try {
+            BatchGetItemOutcome outcome = dynamoDB.batchGetItem(storyTableKeysAndAttributes);
+            List<Item> items = outcome.getTableItems().get(STORY_TABLE_NAME);
+            System.out.printf("Outcome of getFeed batchGetItem is %s%n", items == null ? "null" : "not null");
+            if (items != null) System.out.printf("Found %d items%n", items.size());
+            List<StatusDBData> statusData = convertItemsToStatusData(outcome.getTableItems().get(STORY_TABLE_NAME));
+            double retries = 0;
+            Map<String, KeysAndAttributes> unprocessedKeys = outcome.getUnprocessedKeys();
+            while (unprocessedKeys.size() > 0) {
+                retries++;
+                if (retries > 8) throw new DAOException("Too many attempts to get feed statuses.");
+                expWait(retries);
+                outcome = dynamoDB.batchGetItemUnprocessed(unprocessedKeys);
+                statusData.addAll(convertItemsToStatusData(outcome.getTableItems().get(STORY_TABLE_NAME)));
+                unprocessedKeys = outcome.getUnprocessedKeys();
             }
+            System.out.printf("Status data size is %d after %d retries%n", statusData.size(), (int) retries);
+            return statusData;
+        } catch (AmazonServiceException e) {
+            throw new DAOException(e.getMessage());
+        }
+    }
+
+    @Override
+    public List<StatusDBData> getStory(String alias, int limit, Status lastStatus) throws DAOException {
+        QuerySpec querySpec = new QuerySpec().withKeyConditionExpression(USER_KEY + " = :a")
+                .withValueMap(new ValueMap()
+                        .withString(":a", alias))
+                .withScanIndexForward(false)
+                .withMaxResultSize(limit);
+        if (lastStatus != null) {
+            querySpec.withExclusiveStartKey(new PrimaryKey(USER_KEY, alias, STATUS_KEY, lastStatus.getID()));
         }
 
-        return followeesIndex;
+        try {
+            Table table = dynamoDB.getTable(STORY_TABLE_NAME);
+            ItemCollection<QueryOutcome> items = table.query(querySpec);
+            if (items == null) return null;
+            else {
+                return convertItemsToStatusData(items);
+            }
+        } catch (AmazonServiceException e) {
+            throw new DAOException(e.getMessage());
+        }
     }
 
-    /**
-     * Returns the list of dummy followee data. This is written as a separate method to allow
-     * mocking of the followees.
-     *
-     * @return the followees.
-     */
-    List<Status> getDummyFeed() {
-        return getFakeData().getFakeStatuses();
+    private List<StatusDBData> convertItemsToStatusData(List<Item> items) {
+        List<StatusDBData> statusData = new ArrayList<>();
+        if (items == null) return statusData;
+        for (Item item : items) {
+            statusData.add(new StatusDBData(new Status(
+                    item.getString(POST_KEY),
+                    null,
+                    item.getString(DATETIME_KEY),
+                    Service.serializeToList(item.getString(URLS_KEY)),
+                    Service.serializeToList(item.getString(MENTIONS_KEY)),
+                    item.getString(STATUS_KEY)
+            ), item.getString(USER_KEY)));
+        }
+        return statusData;
     }
 
-    /**
-     * Returns the {@link FakeData} object used to generate dummy followees.
-     * This is written as a separate method to allow mocking of the {@link FakeData}.
-     *
-     * @return a {@link FakeData} instance.
-     */
-    FakeData getFakeData() {
-        return new FakeData();
+    private List<StatusDBData> convertItemsToStatusData(ItemCollection<QueryOutcome> results) {
+        List<StatusDBData> statusData = new ArrayList<>();
+        if (results == null) return statusData;
+        Iterator<Item> iterator = results.iterator();
+        Item item;
+        while (iterator.hasNext()) {
+            item = iterator.next();
+            statusData.add(new StatusDBData(new Status(
+                    item.getString(POST_KEY),
+                    null,
+                    item.getString(DATETIME_KEY),
+                    Service.serializeToList(item.getString(URLS_KEY)),
+                    Service.serializeToList(item.getString(MENTIONS_KEY)),
+                    item.getString(STATUS_KEY)
+            ), item.getString(USER_KEY)));
+        }
+        return statusData;
     }
 }

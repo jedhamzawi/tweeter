@@ -44,7 +44,7 @@ public class IsFollowerTask extends AuthenticatedTask {
         try {
             IsFollowerResponse response = getServerFacade().isFollower(new IsFollowerRequest(this.follower, this.followee, this.authToken), URL_PATH);
             if (response.isSuccess()) {
-                this.isFollower = response.isFollower();
+                this.isFollower = response.getIsFollower();
                 sendSuccessMessage();
             }
             else {

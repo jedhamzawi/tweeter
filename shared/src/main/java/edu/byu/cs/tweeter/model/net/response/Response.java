@@ -10,6 +10,11 @@ public class Response implements Serializable {
     private final boolean success;
     private final String message;
 
+    Response(String message) {
+        this.success = false;
+        this.message = message;
+    }
+
     /**
      * Creates an instance with a null message.
      *

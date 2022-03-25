@@ -1,18 +1,26 @@
 package edu.byu.cs.tweeter.server.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.inject.Inject;
 
+import edu.byu.cs.tweeter.model.domain.User;
 import edu.byu.cs.tweeter.model.net.request.GetStoryRequest;
 import edu.byu.cs.tweeter.model.net.response.GetStoryResponse;
 import edu.byu.cs.tweeter.server.dao.StatusDAO;
+import edu.byu.cs.tweeter.server.dao.UserDAO;
 import edu.byu.cs.tweeter.server.dao.dynamo.StatusDynamoDAO;
+import edu.byu.cs.tweeter.server.dao.model.StatusDBData;
 
-public class StoryService {
+public class StoryService extends Service {
     private final StatusDAO statusDAO;
+    private final UserDAO userDAO;
 
     @Inject
-    public StoryService(StatusDAO statusDAO) {
+    public StoryService(StatusDAO statusDAO, UserDAO userDAO) {
         this.statusDAO = statusDAO;
+        this.userDAO = userDAO;
     }
 
     /**
@@ -22,15 +30,44 @@ public class StoryService {
      *
      * @return the instance.
      */
-    public StatusDAO getStatusDAO() { return statusDAO; }
+    public StatusDAO getStatusDAO() { return this.statusDAO; }
+
+    @Override
+    public UserDAO getUserDAO() { return this.userDAO; }
 
     public GetStoryResponse getStory(GetStoryRequest request) {
-        if(request.getTargetUser() == null || request.getTargetUser().alias == null) {
+        if (request.getTargetUser() == null || request.getTargetUser().getAlias() == null) {
             throw new RuntimeException("[BadRequest] Request needs to have a follower alias");
-        } else if(request.getLimit() <= 0) {
+        } else if (request.getLimit() <= 0) {
             throw new RuntimeException("[BadRequest] Request needs to have a positive limit");
         }
 
-        return getStatusDAO().getStory(request);
+        if (!authenticate(request.getAuthToken())) {
+            return new GetStoryResponse("Unable to authenticate! Your session may have expired. Please log out and log back in.");
+        }
+
+        List<StatusDBData> statusData;
+        try {
+            statusData = getStatusDAO().getStory(request.getTargetUser().getAlias(), request.getLimit(), request.getLastItem());
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("[DBError] Unable to get story statuses: " + e.getMessage());
+        }
+        if (statusData == null || statusData.isEmpty()) {
+            return new GetStoryResponse(new ArrayList<>(), false);
+        }
+        System.out.printf("Received %d items from story query%n", statusData.size());
+
+        List<String> userAliases = getAllUniqueUsers(statusData);
+        List<User> users;
+        try {
+            users = getUserDAO().batchGetUsers(userAliases);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("[DBError] Unable to get status users: " + e.getMessage());
+        }
+
+        return new GetStoryResponse(extractStatuses(statusData, generateUserMap(users)),
+                statusData.size() == request.getLimit());
     }
 }

@@ -11,9 +11,10 @@ public class PagedResponse<T> extends Response {
     private List<T> items;
     private final boolean hasMorePages;
 
-    public PagedResponse(boolean success, boolean hasMorePages) {
-        super(success);
-        this.hasMorePages = hasMorePages;
+    public PagedResponse(String message) {
+        super(message);
+        this.items = null;
+        this.hasMorePages = false;
     }
 
     public PagedResponse(boolean success, String message, boolean hasMorePages) {

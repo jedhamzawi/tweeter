@@ -9,7 +9,7 @@ public class LogoutRequest implements Request {
     /**
      * Allows construction of the object from Json. Private so it won't be called in normal code.
      */
-    public LogoutRequest() {}
+    private LogoutRequest() {}
 
     public LogoutRequest(AuthToken authToken) {
         this.authToken = authToken;

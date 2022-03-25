@@ -1,13 +1,13 @@
-package edu.byu.cs.tweeter.server.dao;
+package edu.byu.cs.tweeter.server.dao.model;
 
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class DBUserData {
+public class UserDBData {
     private final User user;
     private final String hashedPassword;
     private final String salt;
 
-    public DBUserData(User user, String hashedPassword, String salt) {
+    public UserDBData(User user, String hashedPassword, String salt) {
         this.user = user;
         this.hashedPassword = hashedPassword;
         this.salt = salt;

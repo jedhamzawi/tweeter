@@ -10,9 +10,8 @@ import edu.byu.cs.tweeter.model.net.request.GetFollowingRequest;
  */
 public class GetFollowingResponse extends PagedResponse<User> {
 
-
-    public GetFollowingResponse(boolean success, boolean hasMorePages) {
-        super(success, hasMorePages);
+    public GetFollowingResponse(String message) {
+        super(message);
     }
 
     public GetFollowingResponse(boolean success, String message, boolean hasMorePages) {

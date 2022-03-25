@@ -1,6 +1,5 @@
 package edu.byu.cs.tweeter.server.service;
 
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 
 import java.io.ByteArrayInputStream;
@@ -8,8 +7,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -24,13 +21,11 @@ import edu.byu.cs.tweeter.model.net.response.LoginResponse;
 import edu.byu.cs.tweeter.model.net.response.LogoutResponse;
 import edu.byu.cs.tweeter.model.net.response.RegisterResponse;
 import edu.byu.cs.tweeter.model.net.response.UserResponse;
-import edu.byu.cs.tweeter.server.dao.DAOException;
-import edu.byu.cs.tweeter.server.dao.DBUserData;
+import edu.byu.cs.tweeter.server.dao.model.UserDBData;
 import edu.byu.cs.tweeter.server.dao.UserDAO;
 
-public class UserService {
+public class UserService extends Service {
     private static final String IMAGE_METADATA = "image/png";
-    private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
     
     private final UserDAO userDAO;
 
@@ -39,6 +34,7 @@ public class UserService {
         this.userDAO = userDAO;
     }
 
+    @Override
     public UserDAO getUserDAO() { return this.userDAO; }
 
     public LoginResponse login(LoginRequest request) {
@@ -48,10 +44,11 @@ public class UserService {
             throw new RuntimeException("[BadRequest] Missing a password");
         }
 
-        DBUserData userData;
+        UserDBData userData;
         try {
             userData = getUserDAO().getUser(request.getUsername());
-        } catch (DAOException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("[DBError] Checking for user in db failed: " + e.getMessage());
         }
 
@@ -70,7 +67,8 @@ public class UserService {
         AuthToken authToken = generateAuthToken();
         try {
             getUserDAO().putAuthToken(authToken);
-        } catch (DAOException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("[DBError] Unable to put authToken in table: " + e.getMessage());
         }
 
@@ -84,8 +82,10 @@ public class UserService {
 
         try {
             getUserDAO().deleteAuthToken(request.getAuthToken());
-        } catch (DAOException e) {
-            throw new RuntimeException("[DBError] Unable to delete authToken: " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Logout the user anyway, leaving dangling authToken
+            return new LogoutResponse(true);
         }
 
         return new LogoutResponse(true);
@@ -102,16 +102,18 @@ public class UserService {
             if (getUserDAO().getUser(request.getUsername()) != null) {
                 return new RegisterResponse("User already exists! Choose a different alias.");
             }
-        } catch (DAOException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("[DBError] Unable to check if user already exists: " + e.getMessage());
         }
 
         String hashedPassword;
         String salt;
         try {
-            hashedPassword = hashPassword(request.getPassword());
             salt = getSalt();
+            hashedPassword = hashPassword(salt + request.getPassword());
         } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
             throw new RuntimeException("[ServiceError] Unable to hash password: " + e.getMessage());
         }
 
@@ -120,7 +122,8 @@ public class UserService {
         String imageURL;
         try {
             imageURL = getUserDAO().uploadImage(new ByteArrayInputStream(request.getImage()), request.getUsername(), objectMetadata);
-        } catch (DAOException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("[DBError] Unable to upload image: " + e.getMessage());
         }
 
@@ -128,7 +131,8 @@ public class UserService {
             getUserDAO().putUser(request.getUsername(), hashedPassword, salt, request.getFirstName(),
                     request.getLastName(), imageURL, 0, 0);
             System.out.println("Successfully put user in table");
-        } catch (DAOException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("[DBError] Unable to put user in table: " + e.getMessage());
         }
 
@@ -136,7 +140,8 @@ public class UserService {
         try {
             getUserDAO().putAuthToken(authToken);
             System.out.println("Successfully put authToken in table");
-        } catch (DAOException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("[DBError] Unable to put authToken in table: " + e.getMessage());
         }
 
@@ -151,18 +156,15 @@ public class UserService {
             throw new RuntimeException("[BadRequest] Missing an authToken");
         }
 
-        try {
-            if (!getUserDAO().authenticate(request.getAuthToken())) {
-                return new UserResponse("Unable to authenticate logged-in user. Try logging out and logging back in.");
-            }
-        } catch (DAOException e) {
-            throw new RuntimeException("[DBError] Unable to authenticate logged-in user: " + e.getMessage());
+        if (!authenticate(request.getAuthToken())) {
+            return new UserResponse("Unable to authenticate! Your session may have expired. Please log out and log back in.");
         }
 
-        DBUserData userData;
+        UserDBData userData;
         try {
             userData = getUserDAO().getUser(request.getUsername());
-        } catch (AmazonServiceException | DAOException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("[DBError] Unable to find user \"" + request.getUsername() + "\": " + e.getMessage());
         }
         
@@ -192,11 +194,11 @@ public class UserService {
     }
 
     private boolean validatePassword(String passwordFromClient, String passwordFromDB, String salt) throws NoSuchAlgorithmException {
-        String hashedClientPassword = hashPassword(passwordFromClient);
-        return passwordFromDB.equals(hashedClientPassword + salt);
+        String hashedClientPassword = hashPassword(salt + passwordFromClient);
+        return passwordFromDB.equals(hashedClientPassword);
     }
 
     private AuthToken generateAuthToken() {
-        return new AuthToken(UUID.randomUUID().toString(), LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT)));
+        return new AuthToken(UUID.randomUUID().toString(), generateDatetime());
     }
 }

@@ -7,7 +7,7 @@ import java.util.Objects;
 /**
  * Represents a status (or tweet) posted by a user.
  */
-public class Status implements Serializable {
+public class Status implements Comparable<Status>, Serializable {
     /**
      * Text for the status.
      */
@@ -28,6 +28,10 @@ public class Status implements Serializable {
      * User mentions contained in the post text.
      */
     public List<String> mentions;
+    /**
+     * Status id for use in db
+     */
+    public String id;
 
     public Status() {
     }
@@ -38,6 +42,16 @@ public class Status implements Serializable {
         this.datetime = datetime;
         this.urls = urls;
         this.mentions = mentions;
+        this.id = null;
+    }
+
+    public Status(String post, User user, String datetime, List<String> urls, List<String> mentions, String id) {
+        this.post = post;
+        this.user = user;
+        this.datetime = datetime;
+        this.urls = urls;
+        this.mentions = mentions;
+        this.id = id;
     }
 
     public void setUser(User user) {
@@ -48,7 +62,7 @@ public class Status implements Serializable {
         return user;
     }
 
-    public String getDate() {
+    public String getDatetime() {
         return datetime;
     }
 
@@ -64,6 +78,14 @@ public class Status implements Serializable {
         return mentions;
     }
 
+    public String getID() {
+        return this.id;
+    }
+
+    public void setID(String id) {
+        this.id = id;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -73,12 +95,18 @@ public class Status implements Serializable {
                 Objects.equals(user, status.user) &&
                 Objects.equals(datetime, status.datetime) &&
                 Objects.equals(mentions, status.mentions) &&
-                Objects.equals(urls, status.urls);
+                Objects.equals(urls, status.urls) &&
+                Objects.equals(id, status.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(post, user, datetime, mentions, urls);
+        return Objects.hash(post, user, datetime, mentions, urls, id);
+    }
+
+    @Override
+    public int compareTo(Status status) {
+        return this.id.compareTo(status.getID());
     }
 
     @Override
