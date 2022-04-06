@@ -15,6 +15,7 @@ public interface UserDAO {
     void putUser(String alias, String hashedPassword, String salt, String firstName,
                            String lastName, String imageURL, int numFollowers, int numFollowing)
             throws DAOException;
+    void batchPutUsers(List<UserDBData> users) throws DAOException;
     void putAuthToken(AuthToken authToken) throws DAOException;
     void deleteAuthToken(AuthToken authToken) throws DAOException;
     String uploadImage(ByteArrayInputStream image, String alias, ObjectMetadata metadata) throws DAOException;

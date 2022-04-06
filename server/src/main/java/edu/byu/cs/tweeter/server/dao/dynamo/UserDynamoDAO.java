@@ -3,16 +3,19 @@ package edu.byu.cs.tweeter.server.dao.dynamo;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.dynamodbv2.document.BatchGetItemOutcome;
+import com.amazonaws.services.dynamodbv2.document.BatchWriteItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.PrimaryKey;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes;
+import com.amazonaws.services.dynamodbv2.document.TableWriteItems;
 import com.amazonaws.services.dynamodbv2.document.UpdateItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes;
+import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
@@ -138,6 +141,26 @@ public class UserDynamoDAO extends DynamoDAO implements UserDAO {
         } catch (AmazonServiceException e) {
             throw new DAOException(e.getMessage());
         }
+    }
+
+    @Override
+    public void batchPutUsers(List<UserDBData> userDataList) throws DAOException {
+        List<Item> items = new ArrayList<>();
+        for (UserDBData userData : userDataList) {
+            User user = userData.getUser();
+            items.add(new Item()
+                    .withPrimaryKey(USER_KEY, user.getAlias())
+                    .withString(PASSWORD_KEY, userData.getHashedPassword())
+                    .withString(SALT_KEY, userData.getSalt())
+                    .withString(FIRST_NAME_KEY, user.getFirstName())
+                    .withString(LAST_NAME_KEY, user.getLastName())
+                    .withString(IMAGE_KEY, user.getImageUrl())
+                    .withInt(NUM_FOLLOWERS_KEY, 0)
+                    .withInt(NUM_FOLLOWING_KEY, 1));
+        }
+        TableWriteItems userTableWriteItems = new TableWriteItems(USER_TABLE_NAME).withItemsToPut(items);
+
+        batchWriteItems(userTableWriteItems);
     }
 
     @Override

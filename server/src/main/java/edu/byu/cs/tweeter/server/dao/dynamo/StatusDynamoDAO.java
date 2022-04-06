@@ -67,20 +67,7 @@ public class StatusDynamoDAO extends DynamoDAO implements StatusDAO {
         }
         TableWriteItems feedTableWriteItems = new TableWriteItems(FEED_TABLE_NAME).withItemsToPut(items);
 
-        try {
-            BatchWriteItemOutcome outcome = dynamoDB.batchWriteItem(feedTableWriteItems);
-            Map<String, List<WriteRequest>> unprocessedItems = outcome.getUnprocessedItems();
-            double retries = 0;
-            while (unprocessedItems.size() > 0) {
-                retries++;
-                if (retries > 8) throw new DAOException("Too many attempts to put statuses");
-                expWait(retries);
-                outcome = dynamoDB.batchWriteItemUnprocessed(unprocessedItems);
-                unprocessedItems = outcome.getUnprocessedItems();
-            }
-        } catch (AmazonServiceException e) {
-            throw new DAOException(e.getMessage());
-        }
+        batchWriteItems(feedTableWriteItems);
     }
 
     @Override

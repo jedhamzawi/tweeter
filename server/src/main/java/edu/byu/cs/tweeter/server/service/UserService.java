@@ -2,11 +2,15 @@ package edu.byu.cs.tweeter.server.service;
 
 import com.amazonaws.services.s3.model.ObjectMetadata;
 
+import org.checkerframework.checker.units.qual.A;
+
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -21,6 +25,7 @@ import edu.byu.cs.tweeter.model.net.response.LoginResponse;
 import edu.byu.cs.tweeter.model.net.response.LogoutResponse;
 import edu.byu.cs.tweeter.model.net.response.RegisterResponse;
 import edu.byu.cs.tweeter.model.net.response.UserResponse;
+import edu.byu.cs.tweeter.server.dao.DAOException;
 import edu.byu.cs.tweeter.server.dao.model.UserDBData;
 import edu.byu.cs.tweeter.server.dao.UserDAO;
 
@@ -117,14 +122,17 @@ public class UserService extends Service {
             throw new RuntimeException("[ServiceError] Unable to hash password: " + e.getMessage());
         }
 
-        ObjectMetadata objectMetadata = new ObjectMetadata();
-        objectMetadata.setContentType(IMAGE_METADATA);
-        String imageURL;
-        try {
-            imageURL = getUserDAO().uploadImage(new ByteArrayInputStream(request.getImage()), request.getUsername(), objectMetadata);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("[DBError] Unable to upload image: " + e.getMessage());
+        // Default image url
+        String imageURL = "https://hamsesh-tweeter.s3.us-east-2.amazonaws.com/test.png";
+        if (request.getImage() != null) {
+            ObjectMetadata objectMetadata = new ObjectMetadata();
+            objectMetadata.setContentType(IMAGE_METADATA);
+            try {
+                imageURL = getUserDAO().uploadImage(new ByteArrayInputStream(request.getImage()), request.getUsername(), objectMetadata);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException("[DBError] Unable to upload image: " + e.getMessage());
+            }
         }
 
         try {
@@ -173,6 +181,53 @@ public class UserService extends Service {
         }
         
         return new UserResponse(userData.getUser());
+    }
+
+    public void putTestUsers() {
+        List<UserDBData> userData = new ArrayList<>();
+        String salt;
+        String hashedPassword;
+        int currentUserIndex = 0;
+        try {
+            salt = getSalt();
+            hashedPassword = hashPassword(salt + "jdawg");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Unable to get salt");
+        }
+
+        try {
+            getUserDAO().putUser("@jdawg", hashedPassword, salt, "Jake", "Hamzawi", "https://hamsesh-tweeter.s3.us-east-2.amazonaws.com/jdawg.png", 10000, 0);
+        } catch (DAOException e) {
+            throw new RuntimeException("Unable to batch put users. Failed at jdawg: " + e.getMessage());
+        }
+
+        for (int i = 0; i < 10000; i += 25) {
+            userData.clear();
+            for (int j = 0; j < 25; j++) {
+                currentUserIndex = i + j;
+                try {
+                    salt = getSalt();
+                    hashedPassword = hashPassword(salt + "test" + currentUserIndex);
+                } catch (NoSuchAlgorithmException e) {
+                    throw new RuntimeException("Unable to get salt");
+                }
+
+
+                userData.add(new UserDBData(new User(
+                            "Test" + currentUserIndex,
+                            "Test" + currentUserIndex,
+                            "@test" + currentUserIndex,
+                            "https://hamsesh-tweeter.s3.us-east-2.amazonaws.com/test.png"),
+                        hashedPassword, salt));
+            }
+
+            try {
+                getUserDAO().batchPutUsers(userData);
+            } catch (DAOException e) {
+                throw new RuntimeException("Unable to batch put users. Failed at " + i + "-" + (i+25) +
+                        ": " + e.getMessage());
+            }
+        }
     }
 
     private String hashPassword(String passwordToHash) throws NoSuchAlgorithmException {

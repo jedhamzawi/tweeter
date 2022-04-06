@@ -1,5 +1,7 @@
 package edu.byu.cs.tweeter.server.service;
 
+import org.checkerframework.checker.units.qual.A;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +21,7 @@ import edu.byu.cs.tweeter.model.net.response.GetFollowingCountResponse;
 import edu.byu.cs.tweeter.model.net.response.GetFollowingResponse;
 import edu.byu.cs.tweeter.model.net.response.IsFollowerResponse;
 import edu.byu.cs.tweeter.model.net.response.UnfollowResponse;
+import edu.byu.cs.tweeter.server.dao.DAOException;
 import edu.byu.cs.tweeter.server.dao.FollowDAO;
 import edu.byu.cs.tweeter.server.dao.UserDAO;
 import edu.byu.cs.tweeter.server.dao.dynamo.FollowDynamoDAO;
@@ -280,6 +283,24 @@ public class FollowService extends Service {
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("[DBError] Unable to get followee count: " + e.getMessage());
+        }
+    }
+
+    public void followTestUser() {
+        List<String> followerAliases = new ArrayList<>();
+        int currentUserIndex = 0;
+
+        for (int i = 0; i < 10000; i += 25) {
+            followerAliases.clear();
+            for (int j = 0; j < 25; j++) {
+                currentUserIndex = i + j;
+                followerAliases.add("@test" + currentUserIndex);
+            }
+            try {
+                getFollowDAO().batchPutFollowers("@jdawg", followerAliases);
+            } catch (DAOException e) {
+                throw new RuntimeException("Unable to batch put followers. Failed at " + i + "-" + (i+25));
+            }
         }
     }
 }

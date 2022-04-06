@@ -7,11 +7,13 @@ import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.PrimaryKey;
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.TableWriteItems;
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.byu.cs.tweeter.server.dao.DAOException;
@@ -21,8 +23,8 @@ import edu.byu.cs.tweeter.server.dao.FollowDAO;
  * A DAO for accessing 'following' data from the database.
  */
 public class FollowDynamoDAO extends DynamoDAO implements FollowDAO {
-    private static final String FOLLOW_TABLE_NAME = "tweeter_follows";
-    private static final String INDEX_NAME = "follower_followee_index";
+    private static final String FOLLOW_TABLE_NAME = "tweeter-follows";
+    private static final String INDEX_NAME = "follower-followee-index";
     private static final String FOLLOWING_KEY = "followee_alias";
     private static final String FOLLOWER_KEY = "follower_alias";
 
@@ -81,6 +83,17 @@ public class FollowDynamoDAO extends DynamoDAO implements FollowDAO {
         } catch (AmazonServiceException e) {
             throw new DAOException(e.getMessage());
         }
+    }
+
+    @Override
+    public void batchPutFollowers(String followeeAlias, List<String> followerAliases) throws DAOException {
+        List<Item> items = new ArrayList<>();
+        for (String followerAlias : followerAliases) {
+            items.add(new Item().withPrimaryKey(FOLLOWING_KEY, followeeAlias, FOLLOWER_KEY, followerAlias));
+        }
+        TableWriteItems followTableWriteItems = new TableWriteItems(FOLLOW_TABLE_NAME).withItemsToPut(items);
+
+        batchWriteItems(followTableWriteItems);
     }
 
     @Override
