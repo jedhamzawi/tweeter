@@ -62,7 +62,6 @@ public class StatusDynamoDAO extends DynamoDAO implements StatusDAO {
     public void postStatusToFeeds(String statusID, List<String> followerAliases, String posterAlias) throws DAOException {
         List<Item> items = new ArrayList<>();
         for (String follower : followerAliases) {
-            System.out.printf("Added %s to the list of items to add%n", follower);
             items.add(new Item().withPrimaryKey(USER_KEY, follower, STATUS_KEY, statusID).withString(POSTER_KEY, posterAlias));
         }
         TableWriteItems feedTableWriteItems = new TableWriteItems(FEED_TABLE_NAME).withItemsToPut(items);

@@ -14,6 +14,8 @@ dependencies {
     implementation 'com.google.inject:guice:5.1.0'
     implementation 'com.amazonaws:aws-java-sdk-core:1.12.183'
     implementation 'com.amazonaws:aws-java-sdk-dynamodb:1.12.183'
+    implementation 'com.amazonaws:aws-java-sdk-sqs:1.12.193'
+    implementation 'com.amazonaws:aws-lambda-java-events:3.11.0'
 
     // Testing related dependencies
 
