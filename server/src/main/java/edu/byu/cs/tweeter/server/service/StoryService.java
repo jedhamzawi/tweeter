@@ -14,8 +14,10 @@ import edu.byu.cs.tweeter.server.dao.dynamo.StatusDynamoDAO;
 import edu.byu.cs.tweeter.server.dao.model.StatusDBData;
 
 public class StoryService extends Service {
-    private final StatusDAO statusDAO;
-    private final UserDAO userDAO;
+    private StatusDAO statusDAO;
+    private UserDAO userDAO;
+
+    public StoryService() {}
 
     @Inject
     public StoryService(StatusDAO statusDAO, UserDAO userDAO) {
